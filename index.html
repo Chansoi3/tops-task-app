@@ -15,41 +15,27 @@
   
   <style>
     body { background-color: #f8f9fa; font-family: 'Segoe UI', Roboto, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
-    
     .navbar { background: linear-gradient(90deg, #d32f2f 0%, #e53935 100%); color: white; padding-top: env(safe-area-inset-top); }
-    
-    .task-card { 
-      border-radius: 12px; border: none; border-left: 6px solid #dee2e6; 
-      transition: all 0.2s ease-in-out; cursor: pointer; background: #ffffff;
-    }
-    .task-card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.05) !important; }
+    .task-card { border-radius: 12px; border: none; border-left: 6px solid #dee2e6; transition: all 0.2s ease-in-out; cursor: pointer; background: #ffffff; }
     .task-card:active { transform: scale(0.98); }
-    
     .priority-high { border-left-color: #dc3545; }
     .priority-medium { border-left-color: #ffc107; }
     .priority-low { border-left-color: #28a745; }
-    
     .status-badge { font-weight: 500; letter-spacing: 0.3px; padding: 6px 12px; border-radius: 20px; }
     .mic-btn { cursor: pointer; color: #d32f2f; font-size: 1rem; transition: 0.3s; padding: 5px 10px; border-radius: 20px; background: #ffeeee; font-weight: 500; }
-    .mic-btn:hover { background: #ffdddd; }
     .mic-btn.recording { color: white; background: #dc3545; animation: pulse 1s infinite; }
-    
     @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); } }
-    
     .form-control, .form-select { border-radius: 8px; border: 1px solid #ced4da; padding: 10px 15px; }
-    .form-control:focus, .form-select:focus { border-color: #d32f2f; box-shadow: 0 0 0 0.25rem rgba(211, 47, 47, 0.25); }
     label.fw-bold { color: #495057; font-size: 0.95rem; }
-
-    /* --- ดีไซน์ปุ่มลอยมุมขวาล่าง --- */
-    .fab-container { position: fixed; bottom: 30px; right: 20px; z-index: 1050; }
-    .fab-btn { 
-      width: 65px; height: 65px; border-radius: 50%; 
-      background: linear-gradient(135deg, #d32f2f, #b71c1c); color: white; 
-      display: flex; justify-content: center; align-items: center; 
-      box-shadow: 0 6px 15px rgba(211, 47, 47, 0.4); 
-      font-size: 1.8rem; transition: all 0.2s; border: none; 
-    }
-    .fab-btn:active { transform: scale(0.9); box-shadow: 0 2px 8px rgba(211, 47, 47, 0.4); }
+    
+    .fab-container { position: fixed; bottom: 30px; right: 20px; z-index: 1040; }
+    .fab-btn { width: 65px; height: 65px; border-radius: 50%; background: linear-gradient(135deg, #d32f2f, #b71c1c); color: white; display: flex; justify-content: center; align-items: center; box-shadow: 0 6px 15px rgba(211, 47, 47, 0.4); font-size: 1.8rem; border: none; }
+    .fab-btn:active { transform: scale(0.9); }
+    
+    /* สไตล์กระดานวาดเขียน */
+    #drawingCanvas { border: 2px dashed #ccc; border-radius: 8px; background: #fff; width: 100%; height: 200px; touch-action: none; cursor: crosshair; }
+    .clickable-img { cursor: pointer; transition: 0.2s; }
+    .clickable-img:active { transform: scale(0.95); opacity: 0.8; }
   </style>
 </head>
 <body>
@@ -57,10 +43,10 @@
   <nav class="navbar navbar-dark mb-4 p-3 shadow-sm sticky-top">
     <div class="container-fluid d-flex align-items-center">
       <div>
-        <button class="btn btn-link text-white p-0 me-3 border-0 text-decoration-none" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
+        <button class="btn btn-link text-white p-0 me-3 border-0" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
           <i class="fa-solid fa-bars fs-4"></i>
         </button>
-        <span class="navbar-brand mb-0 h5 fw-bold tracking-wide">Tops Task</span>
+        <span class="navbar-brand mb-0 h5 fw-bold">Tops Task</span>
       </div>
     </div>
   </nav>
@@ -78,18 +64,10 @@
     </div>
     <div class="offcanvas-body p-0">
       <div class="list-group list-group-flush mt-2">
-        <button class="list-group-item list-group-item-action py-3 fw-bold text-danger border-0" onclick="setFilterStatus('หน้าแรก')" data-bs-dismiss="offcanvas">
-          <i class="fa-solid fa-fire fa-beat-fade me-3 w-20px text-center"></i> งานเร่งด่วน (10 ลำดับแรก)
-        </button>
-        <button class="list-group-item list-group-item-action py-3 border-0 text-dark" onclick="setFilterStatus('งานใหม่')" data-bs-dismiss="offcanvas">
-          <i class="fa-solid fa-asterisk fa-spin me-3 w-20px text-center text-info"></i> งานใหม่
-        </button>
-        <button class="list-group-item list-group-item-action py-3 border-0 text-dark" onclick="setFilterStatus('กำลังดำเนินงาน')" data-bs-dismiss="offcanvas">
-          <i class="fa-solid fa-spinner fa-spin-pulse me-3 w-20px text-center text-warning"></i> กำลังดำเนินงาน
-        </button>
-        <button class="list-group-item list-group-item-action py-3 border-0 text-dark" onclick="setFilterStatus('เสร็จสิ้น')" data-bs-dismiss="offcanvas">
-          <i class="fa-solid fa-circle-check me-3 w-20px text-center text-success"></i> เสร็จสิ้น
-        </button>
+        <button class="list-group-item list-group-item-action py-3 fw-bold text-danger border-0" onclick="setFilterStatus('หน้าแรก')" data-bs-dismiss="offcanvas"><i class="fa-solid fa-fire fa-beat-fade me-3 w-20px text-center"></i> งานเร่งด่วน</button>
+        <button class="list-group-item list-group-item-action py-3 border-0 text-dark" onclick="setFilterStatus('งานใหม่')" data-bs-dismiss="offcanvas"><i class="fa-solid fa-asterisk fa-spin me-3 w-20px text-center text-info"></i> งานใหม่</button>
+        <button class="list-group-item list-group-item-action py-3 border-0 text-dark" onclick="setFilterStatus('กำลังดำเนินงาน')" data-bs-dismiss="offcanvas"><i class="fa-solid fa-spinner fa-spin-pulse me-3 w-20px text-center text-warning"></i> กำลังดำเนินงาน</button>
+        <button class="list-group-item list-group-item-action py-3 border-0 text-dark" onclick="setFilterStatus('เสร็จสิ้น')" data-bs-dismiss="offcanvas"><i class="fa-solid fa-circle-check me-3 w-20px text-center text-success"></i> เสร็จสิ้น</button>
       </div>
     </div>
   </div>
@@ -98,23 +76,16 @@
     
     <div id="dashboard-sec">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="mb-0 fw-bold text-dark" id="dashboard-title">
-          <i class="fa-solid fa-fire fa-beat text-danger me-2"></i>รายการงานเร่งด่วน
-        </h5>
+        <h5 class="mb-0 fw-bold text-dark" id="dashboard-title"><i class="fa-solid fa-fire fa-beat text-danger me-2"></i>รายการงานเร่งด่วน</h5>
       </div>
-
       <div class="input-group mb-4 shadow-sm rounded-3">
         <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-filter"></i></span>
         <select id="branchFilter" class="form-select border-start-0" onchange="applyFilters()">
           <option value="">แสดงทุกสาขา</option>
         </select>
       </div>
-
       <div id="task-list" class="row gy-3">
-        <div class="text-center text-muted mt-5">
-          <div class="spinner-border text-danger mb-2" role="status"></div>
-          <p>กำลังเชื่อมต่อฐานข้อมูล...</p>
-        </div>
+        <div class="text-center text-muted mt-5"><div class="spinner-border text-danger mb-2"></div><p>กำลังเชื่อมต่อฐานข้อมูล...</p></div>
       </div>
     </div>
 
@@ -128,30 +99,25 @@
         <form id="taskForm" onsubmit="submitTask(event)">
           <div class="mb-3">
             <label class="form-label fw-bold">หัวข้อรายการ</label>
-            <input type="text" class="form-control" id="f_title" placeholder="ระบุหัวข้องาน" required>
+            <input type="text" class="form-control" id="f_title" required>
           </div>
+          
+          <div class="mb-3">
+            <label class="form-label fw-bold">สาขาที่ปฏิบัติงาน</label>
+            <select class="form-select" id="f_branch" onchange="autoSelectFormat()" required>
+              <option value="">-- กรุณาเลือกสาขา --</option>
+            </select>
+          </div>
+          <div class="d-none">
+            <select id="f_format"><option value=""></option><option value="CO">CO</option><option value="FC">FC</option></select>
+          </div>
+
           <div class="row">
             <div class="col-md-6 mb-3">
-              <label class="form-label fw-bold">สาขาที่ปฏิบัติงาน</label>
-              <select class="form-select" id="f_branch" onchange="autoSelectFormat()" required>
-                <option value="">-- กรุณาเลือกสาขา --</option>
-              </select>
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-bold">รูปแบบสาขา (Format)</label>
-              <select class="form-select bg-light" id="f_format" required>
-                <option value="">-- ระบบกำหนดอัตโนมัติ --</option>
-                <option value="CO">CO</option>
-                <option value="FC">FC</option>
-              </select>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-4 mb-3">
               <label class="form-label fw-bold">กำหนดเสร็จสิ้น</label>
               <input type="date" class="form-control" id="f_deadline" required>
             </div>
-            <div class="col-md-4 mb-3">
+            <div class="col-md-6 mb-3">
               <label class="form-label fw-bold">ระดับความสำคัญ</label>
               <select class="form-select" id="f_priority" required>
                 <option value="สูง">🔴 ระดับสูง (เร่งด่วน)</option>
@@ -159,22 +125,30 @@
                 <option value="ต่ำ">🟢 ระดับต่ำ</option>
               </select>
             </div>
-            <div class="col-md-4 mb-3">
-              <label class="form-label fw-bold">แผนกผู้รับผิดชอบ</label>
-              <input type="text" class="form-control" id="f_department" placeholder="เช่น IT, ก่อสร้าง" required>
-            </div>
           </div>
+          
+          <div class="mb-3">
+            <label class="form-label fw-bold">แผนกผู้รับผิดชอบ</label>
+            <input type="text" class="form-control" id="f_department" list="deptOptions" placeholder="พิมพ์เพื่อค้นหาแผนก..." required autocomplete="off">
+            <datalist id="deptOptions"></datalist>
+          </div>
+
           <div class="mb-3">
             <label class="form-label fw-bold d-flex justify-content-between align-items-center w-100">
               รายละเอียดการดำเนินงาน
-              <span class="mic-btn shadow-sm" id="micBtn" onclick="toggleMic()">
-                <i class="fa-solid fa-microphone"></i> พิมพ์ด้วยเสียง
-              </span>
+              <span class="mic-btn shadow-sm" id="micBtn" onclick="toggleMic()"><i class="fa-solid fa-microphone"></i> พูดข้อความ</span>
             </label>
-            <textarea class="form-control" id="f_details" rows="4" placeholder="ระบุรายละเอียดงาน หรือใช้ระบบพิมพ์ด้วยเสียง"></textarea>
+            <textarea class="form-control mb-2" id="f_details" rows="3" placeholder="ระบุรายละเอียดงาน..."></textarea>
+            
+            <label class="form-label fw-bold text-primary mt-2"><i class="fa-solid fa-pen"></i> จด Note ด้วยปากกา</label>
+            <div class="position-relative">
+              <canvas id="drawingCanvas"></canvas>
+              <button type="button" class="btn btn-sm btn-light position-absolute top-0 end-0 m-2 border shadow-sm" onclick="clearCanvas()"><i class="fa-solid fa-eraser"></i> ลบกระดาน</button>
+            </div>
           </div>
+
           <div class="mb-4">
-            <label class="form-label fw-bold">ภาพถ่ายประกอบ (ถ้ามี)</label>
+            <label class="form-label fw-bold"><i class="fa-solid fa-image"></i> ภาพถ่ายประกอบ (ถ้ามี)</label>
             <input type="file" class="form-control" id="f_image" accept="image/*">
           </div>
           <button type="submit" class="btn btn-danger w-100 fw-bold py-2 rounded-pill shadow-sm" id="saveBtn">
@@ -190,17 +164,17 @@
       <div class="modal-content border-0 shadow-lg rounded-4">
         <div class="modal-header bg-light border-bottom-0 pb-0 pt-4 px-4">
           <h5 class="modal-title fw-bold text-dark">รายละเอียดรายการงาน</h5>
-          <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body px-4 pt-3">
           <div class="bg-light p-3 rounded-3 mb-3 border">
             <div class="row mb-2">
-              <div class="col-5 text-muted small">สาขา:</div>
-              <div class="col-7 fw-bold text-dark"><span id="m_branch"></span> (<span id="m_format"></span>)</div>
+              <div class="col-4 text-muted small">สาขา:</div>
+              <div class="col-8 fw-bold text-dark"><span id="m_branch"></span></div>
             </div>
             <div class="row">
-              <div class="col-5 text-muted small">กำหนดส่งเดิม:</div>
-              <div class="col-7 fw-bold text-secondary"><i class="fa-regular fa-calendar me-1"></i> <span id="m_deadline"></span></div>
+              <div class="col-4 text-muted small">กำหนดส่ง:</div>
+              <div class="col-8 fw-bold text-secondary"><i class="fa-regular fa-calendar me-1"></i> <span id="m_deadline"></span></div>
             </div>
           </div>
           
@@ -210,7 +184,6 @@
             <label class="fw-bold text-dark small mb-1">หัวข้อรายการ</label>
             <input type="text" id="m_title_edit" class="form-control bg-white">
           </div>
-
           <div class="mb-3">
             <label class="fw-bold text-dark small mb-1">สถานะปัจจุบัน</label>
             <select id="m_status_edit" class="form-select bg-white fw-bold border-primary text-primary">
@@ -220,21 +193,32 @@
               <option value="เสร็จสิ้น">เสร็จสิ้น</option>
             </select>
           </div>
-
           <div class="mb-3">
-            <label class="fw-bold text-dark small mb-1">รายละเอียดการดำเนินงาน</label>
+            <label class="fw-bold text-dark small mb-1">รายละเอียด</label>
             <textarea id="m_details_edit" class="form-control bg-white" rows="4"></textarea>
           </div>
           
           <div id="m_image_container" class="mt-3 text-center d-none">
-            <label class="fw-bold text-dark small mb-2 d-block text-start">ภาพประกอบ</label>
-            <img id="m_image" src="" class="img-fluid rounded-3 border shadow-sm" style="max-height: 250px; width: auto; object-fit: contain;">
+            <label class="fw-bold text-dark small d-block text-start mb-2">ภาพประกอบ / Note (กดเพื่อดูรูปเต็ม)</label>
+            <img id="m_image" src="" class="img-fluid rounded-3 border shadow-sm clickable-img mb-2" style="max-height: 200px;" onclick="viewFullImage(this.src)">
+            <img id="m_draw_image" src="" class="img-fluid rounded-3 border shadow-sm clickable-img d-none" style="max-height: 200px;" onclick="viewFullImage(this.src)">
           </div>
         </div>
         <div class="modal-footer border-top-0 px-4 pb-4">
           <button type="button" class="btn btn-dark w-100 fw-bold py-2 rounded-pill shadow-sm" onclick="saveTaskEdit()" id="modalSaveBtn">
-            <i class="fa-solid fa-floppy-disk me-2"></i>บันทึกการปรับปรุงข้อมูล
+            <i class="fa-solid fa-floppy-disk me-2"></i>บันทึกการปรับปรุง
           </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="imageViewerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content bg-transparent border-0">
+        <div class="modal-body text-center position-relative p-0">
+          <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-2 bg-dark shadow" data-bs-dismiss="modal"></button>
+          <img id="fullImageSrc" src="" class="img-fluid rounded-3 shadow-lg" style="max-height: 90vh;">
         </div>
       </div>
     </div>
@@ -242,7 +226,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // URL ของคุณถูกใส่ไว้ที่นี่แล้ว!
+    // 🔴🔴🔴 นำ URL จาก Apps Script มาวางตรงนี้ 🔴🔴🔴
     const API_URL = "https://script.google.com/macros/s/AKfycbwBFTLE8Q_7T63l6dzkZuqqmsRnQvQRby0H6tcICOH9Ld2onRTJ00bYQ9jDGTJaC9bdDg/exec";
 
     const rawBranches = [
@@ -255,40 +239,42 @@
 
     let allTasksData = [];
     let currentStatusFilter = 'หน้าแรก';
+    let isCanvasDrawn = false; // ตัวแปรเช็คว่ามีการวาดบนกระดานหรือไม่
 
     document.addEventListener('DOMContentLoaded', () => {
       rawBranches.sort();
       const branchSelect = document.getElementById('f_branch');
       const dashboardBranchSelect = document.getElementById('branchFilter');
-      
       rawBranches.forEach(b => {
         let opt1 = document.createElement('option'); opt1.value = b; opt1.innerHTML = b; branchSelect.appendChild(opt1);
         let opt2 = document.createElement('option'); opt2.value = b; opt2.innerHTML = b; dashboardBranchSelect.appendChild(opt2);
       });
       loadTasks();
+      initCanvas(); // เตรียมกระดานวาดเขียน
     });
 
-    // เงื่อนไข Format ใหม่ (รหัส 4,5,6,7,8 = CO)
     function autoSelectFormat() {
       const branchStr = document.getElementById('f_branch').value;
       const formatSelect = document.getElementById('f_format');
       if (!branchStr) { formatSelect.value = ''; return; }
-      let code = branchStr.split(' ')[0].replace(/^0+/, ''); 
-      let firstDigit = code.charAt(0);
-      if (['1', '2', '3'].includes(firstDigit)) formatSelect.value = 'FC';
-      else if (['4', '5', '6', '7', '8'].includes(firstDigit)) formatSelect.value = 'CO';
-      else formatSelect.value = ''; 
+      let firstDigit = branchStr.split(' ')[0].replace(/^0+/, '').charAt(0);
+      formatSelect.value = (['1', '2', '3'].includes(firstDigit)) ? 'FC' : 'CO';
     }
 
     function showSection(id) {
       document.getElementById('dashboard-sec').classList.add('d-none');
       document.getElementById('add-task-sec').classList.add('d-none');
       document.getElementById(id).classList.remove('d-none');
-      
-      // ซ่อน/แสดง ปุ่มลอยเพิ่มงาน
       document.getElementById('fabMain').style.display = (id === 'dashboard-sec') ? 'flex' : 'none';
-      
       if(id === 'dashboard-sec') applyFilters();
+      if(id === 'add-task-sec') resizeCanvas();
+    }
+
+    // อัปเดต Suggestion แผนกอัตโนมัติ
+    function updateDepartmentSuggestion() {
+      const depts = [...new Set(allTasksData.map(t => t.department).filter(d => d.trim() !== ''))];
+      const datalist = document.getElementById('deptOptions');
+      datalist.innerHTML = depts.map(d => `<option value="${d}">`).join('');
     }
 
     function loadTasks() {
@@ -298,21 +284,20 @@
       fetch(API_URL)
         .then(res => res.json())
         .then(tasks => {
-          if (tasks.error) { list.innerHTML = `<div class="alert alert-danger shadow-sm border-0">เกิดข้อผิดพลาดในการดึงข้อมูล: ${tasks.error}</div>`; return; }
+          if (tasks.error) return;
           allTasksData = tasks;
+          updateDepartmentSuggestion(); // ดึงข้อมูลแผนกไปทำ Suggestion
           applyFilters(); 
         })
-        .catch(err => { list.innerHTML = `<div class="alert alert-danger shadow-sm border-0"><i class="fa-solid fa-triangle-exclamation me-2"></i>ไม่สามารถเชื่อมต่อระบบฐานข้อมูลได้</div>`; });
+        .catch(err => { list.innerHTML = `<div class="alert alert-danger shadow-sm border-0"><i class="fa-solid fa-triangle-exclamation"></i> ไม่สามารถเชื่อมต่อฐานข้อมูลได้</div>`; });
     }
 
     function setFilterStatus(status) {
       currentStatusFilter = status;
-      let titleIcon = '';
-      if(status === 'หน้าแรก') titleIcon = '<i class="fa-solid fa-fire fa-beat text-danger me-2"></i>รายการงานเร่งด่วน';
-      else if(status === 'งานใหม่') titleIcon = '<i class="fa-solid fa-asterisk fa-spin text-info me-2"></i>รายการงานใหม่';
-      else if(status === 'กำลังดำเนินงาน') titleIcon = '<i class="fa-solid fa-spinner fa-spin-pulse text-warning me-2"></i>อยู่ระหว่างดำเนินการ';
-      else titleIcon = '<i class="fa-solid fa-circle-check text-success me-2"></i>รายการที่เสร็จสิ้น';
-      
+      let titleIcon = status === 'หน้าแรก' ? '<i class="fa-solid fa-fire fa-beat text-danger me-2"></i>รายการงานเร่งด่วน' :
+                      status === 'งานใหม่' ? '<i class="fa-solid fa-asterisk fa-spin text-info me-2"></i>รายการงานใหม่' :
+                      status === 'กำลังดำเนินงาน' ? '<i class="fa-solid fa-spinner fa-spin-pulse text-warning me-2"></i>อยู่ระหว่างดำเนินการ' :
+                      '<i class="fa-solid fa-circle-check text-success me-2"></i>รายการที่เสร็จสิ้น';
       document.getElementById('dashboard-title').innerHTML = titleIcon;
       applyFilters();
     }
@@ -320,70 +305,35 @@
     function applyFilters() {
       const branchVal = document.getElementById('branchFilter').value;
       let filtered = allTasksData;
-
       if (branchVal !== '') filtered = filtered.filter(t => t.branch === branchVal);
-
-      if (currentStatusFilter === 'หน้าแรก') {
-        filtered = filtered.filter(t => t.status !== 'เสร็จสิ้น').slice(0, 10); 
-      } else {
-        filtered = filtered.filter(t => t.status === currentStatusFilter || (currentStatusFilter === 'งานใหม่' && t.status === 'เปิดงานใหม่'));
-      }
+      if (currentStatusFilter === 'หน้าแรก') filtered = filtered.filter(t => t.status !== 'เสร็จสิ้น').slice(0, 10); 
+      else filtered = filtered.filter(t => t.status === currentStatusFilter || (currentStatusFilter === 'งานใหม่' && t.status === 'เปิดงานใหม่'));
       renderTasks(filtered);
     }
 
     function renderTasks(tasks) {
       const list = document.getElementById('task-list');
-      if (tasks.length === 0) { 
-        list.innerHTML = `
-          <div class="col-12 mt-4 text-center text-muted">
-            <div class="bg-white p-5 rounded-4 shadow-sm border">
-              <i class="fa-regular fa-folder-open fs-1 text-black-50 mb-3"></i>
-              <h5>ไม่พบรายการข้อมูลในหมวดหมู่นี้</h5>
-            </div>
-          </div>`; 
-        return; 
-      }
+      if (tasks.length === 0) { list.innerHTML = `<div class="col-12 mt-4 text-center text-muted"><div class="bg-white p-5 rounded-4 shadow-sm border"><i class="fa-regular fa-folder-open fs-1 mb-3"></i><h5>ไม่พบรายการข้อมูล</h5></div></div>`; return; }
       
       let html = '';
       tasks.forEach(task => {
-        // แยกสีเส้นขอบซ้าย
         let borderClass = task.priority === 'สูง' ? 'priority-high' : (task.priority === 'ปานกลาง' ? 'priority-medium' : 'priority-low');
         
-        // แยกป้ายสถานะ
-        let statusBadge = '';
-        if(task.status.includes('ใหม่')) {
-          statusBadge = '<span class="status-badge bg-info text-dark shadow-sm"><i class="fa-solid fa-asterisk fa-spin me-1"></i> งานใหม่</span>';
-        } else if(task.status === 'เสร็จสิ้น') {
-          statusBadge = '<span class="status-badge bg-success text-white shadow-sm"><i class="fa-solid fa-check me-1"></i> เสร็จสิ้น</span>';
-        } else {
-          statusBadge = '<span class="status-badge bg-warning text-dark shadow-sm"><i class="fa-solid fa-spinner fa-spin-pulse me-1"></i> ดำเนินการ</span>';
-        }
+        let statusBadge = task.status.includes('ใหม่') ? '<span class="status-badge bg-info text-dark shadow-sm"><i class="fa-solid fa-asterisk fa-spin"></i> งานใหม่</span>' :
+                          task.status === 'เสร็จสิ้น' ? '<span class="status-badge bg-success text-white shadow-sm"><i class="fa-solid fa-check"></i> เสร็จสิ้น</span>' :
+                          '<span class="status-badge bg-warning text-dark shadow-sm"><i class="fa-solid fa-spinner fa-spin-pulse"></i> ดำเนินการ</span>';
 
-        // แยกป้ายความสำคัญ
-        let priorityBadge = '';
-        if(task.priority === 'สูง') {
-          priorityBadge = '<span class="badge bg-danger px-2 py-1 shadow-sm"><i class="fa-solid fa-angles-up"></i> สูง</span>';
-        } else if(task.priority === 'ปานกลาง') {
-          priorityBadge = '<span class="badge bg-warning text-dark px-2 py-1 shadow-sm"><i class="fa-solid fa-equals"></i> ปานกลาง</span>';
-        } else {
-          priorityBadge = '<span class="badge bg-success px-2 py-1 shadow-sm"><i class="fa-solid fa-angles-down"></i> ต่ำ</span>';
-        }
+        let priorityBadge = task.priority === 'สูง' ? '<span class="badge bg-danger px-2 py-1 shadow-sm">สูง</span>' :
+                            task.priority === 'ปานกลาง' ? '<span class="badge bg-warning text-dark px-2 py-1 shadow-sm">ปานกลาง</span>' :
+                            '<span class="badge bg-success px-2 py-1 shadow-sm">ต่ำ</span>';
 
-        // ไฮไลท์ป้ายวันที่เหลือ
         let daysLeft = Math.ceil((new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24));
-        let timeDisplay = '';
-        
-        if (task.status === 'เสร็จสิ้น') {
-           timeDisplay = `<span class="badge bg-light text-success border border-success p-2"><i class="fa-regular fa-calendar-check me-1"></i> ปิดงานแล้ว</span>`;
-        } else if (daysLeft < 0) {
-           timeDisplay = `<span class="badge bg-danger shadow-sm p-2 fs-6"><i class="fa-solid fa-triangle-exclamation fa-fade me-1"></i> เลยกำหนด ${Math.abs(daysLeft)} วัน!</span>`;
-        } else if (daysLeft <= 3) {
-           timeDisplay = `<span class="badge bg-warning text-dark shadow-sm p-2"><i class="fa-regular fa-bell fa-shake me-1"></i> เหลืออีก ${daysLeft} วัน</span>`;
-        } else {
-           timeDisplay = `<span class="badge bg-light text-secondary border p-2"><i class="fa-regular fa-calendar me-1"></i> ส่ง: ${new Date(task.deadline).toLocaleDateString('th-TH')}</span>`;
-        }
+        let timeDisplay = task.status === 'เสร็จสิ้น' ? `<span class="badge bg-light text-success border border-success p-2">ปิดงานแล้ว</span>` :
+                          daysLeft < 0 ? `<span class="badge bg-danger shadow-sm p-2"><i class="fa-solid fa-triangle-exclamation fa-fade"></i> เลยกำหนด ${Math.abs(daysLeft)} วัน</span>` :
+                          daysLeft <= 3 ? `<span class="badge bg-warning text-dark shadow-sm p-2"><i class="fa-regular fa-bell fa-shake"></i> เหลือ ${daysLeft} วัน</span>` :
+                          `<span class="badge bg-light text-secondary border p-2">ส่ง: ${new Date(task.deadline).toLocaleDateString('th-TH')}</span>`;
 
-        let hasImage = task.imageUrl ? ' <i class="fa-solid fa-paperclip text-primary ms-1" title="มีไฟล์แนบ"></i>' : '';
+        let hasImage = (task.imageUrl || task.drawUrl) ? ' <i class="fa-solid fa-paperclip text-primary ms-1"></i>' : '';
 
         html += `
           <div class="col-12 col-md-6">
@@ -394,112 +344,140 @@
               </div>
               <p class="mb-1 text-muted small"><i class="fa-solid fa-location-dot me-1 text-secondary"></i> ${task.branch}</p>
               <div class="d-flex justify-content-between align-items-center mt-3 border-top pt-2">
-                ${timeDisplay}
-                ${priorityBadge}
+                ${timeDisplay} ${priorityBadge}
               </div>
             </div>
-          </div>
-        `;
+          </div>`;
       });
       list.innerHTML = html;
     }
 
-    // Modal เปิดแก้ไขรายละเอียด
+    // เปิด Modal ดู/แก้ไขงาน
     const taskModal = new bootstrap.Modal(document.getElementById('taskModal'));
     function openTaskModal(task) {
       document.getElementById('m_row').value = task.row;
       document.getElementById('m_branch').innerText = task.branch;
-      document.getElementById('m_format').innerText = task.format;
       document.getElementById('m_deadline').innerText = new Date(task.deadline).toLocaleDateString('th-TH');
-      
       document.getElementById('m_title_edit').value = task.title;
       document.getElementById('m_details_edit').value = task.details;
       document.getElementById('m_status_edit').value = task.status;
       
       const imgContainer = document.getElementById('m_image_container');
       const imgElement = document.getElementById('m_image');
-      if (task.imageUrl) { 
-        imgElement.src = task.imageUrl; 
-        imgContainer.classList.remove('d-none'); 
-      } else { 
-        imgContainer.classList.add('d-none'); 
-        imgElement.src = "";
-      }
+      const drawElement = document.getElementById('m_draw_image');
+      
+      let showContainer = false;
+      if (task.imageUrl) { imgElement.src = task.imageUrl; imgElement.classList.remove('d-none'); showContainer = true; } else { imgElement.classList.add('d-none'); }
+      if (task.drawUrl) { drawElement.src = task.drawUrl; drawElement.classList.remove('d-none'); showContainer = true; } else { drawElement.classList.add('d-none'); }
+      
+      if(showContainer) imgContainer.classList.remove('d-none'); else imgContainer.classList.add('d-none');
       
       taskModal.show();
     }
 
-    // บันทึกการแก้ไข
+    // ฟังก์ชันดูรูปเต็ม
+    const imageViewerModal = new bootstrap.Modal(document.getElementById('imageViewerModal'));
+    function viewFullImage(src) {
+      document.getElementById('fullImageSrc').src = src;
+      imageViewerModal.show();
+    }
+
     function saveTaskEdit() {
       const btn = document.getElementById('modalSaveBtn');
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>กำลังดำเนินการ...'; 
-      btn.disabled = true;
-
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>กำลังดำเนินการ...'; btn.disabled = true;
       const updatedData = {
-        row: document.getElementById('m_row').value,
-        title: document.getElementById('m_title_edit').value,
-        status: document.getElementById('m_status_edit').value,
-        details: document.getElementById('m_details_edit').value
+        row: document.getElementById('m_row').value, title: document.getElementById('m_title_edit').value,
+        status: document.getElementById('m_status_edit').value, details: document.getElementById('m_details_edit').value
       };
-
-      fetch(API_URL, {
-        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'updateTask', taskData: updatedData })
-      })
-      .then(res => res.json())
-      .then(() => { 
-        taskModal.hide(); 
-        loadTasks(); 
-      })
-      .finally(() => { 
-        btn.innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i>บันทึกการปรับปรุงข้อมูล'; 
-        btn.disabled = false; 
-      });
+      fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateTask', taskData: updatedData }) })
+      .then(() => { taskModal.hide(); loadTasks(); })
+      .finally(() => { btn.innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i>บันทึกการปรับปรุง'; btn.disabled = false; });
     }
 
-    // ระบบพิมพ์ด้วยเสียง
-    let recognizing = false; let recognition;
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      recognition.lang = 'th-TH'; recognition.interimResults = false;
-      recognition.onresult = function(e) { document.getElementById('f_details').value += e.results[0][0].transcript + " "; };
-      recognition.onend = function() { recognizing = false; document.getElementById('micBtn').classList.remove('recording'); };
-      recognition.onerror = function(e) { alert("ไม่สามารถเข้าถึงไมโครโฟนได้ กรุณาตรวจสอบการตั้งค่า"); recognizing = false; document.getElementById('micBtn').classList.remove('recording'); };
-    } else { document.getElementById('micBtn').style.display = 'none'; }
+    /* --- ระบบกระดานวาดเขียน Note (Canvas) --- */
+    const canvas = document.getElementById('drawingCanvas');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
 
-    function toggleMic() {
-      if (!recognition) return alert("อุปกรณ์ของคุณไม่รองรับระบบสั่งงานด้วยเสียง");
-      if (recognizing) { recognition.stop(); return; }
-      recognition.start(); recognizing = true; document.getElementById('micBtn').classList.add('recording');
+    function initCanvas() {
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#000000';
+      
+      // Events สำหรับเมาส์
+      canvas.addEventListener('mousedown', startPosition);
+      canvas.addEventListener('mouseup', endPosition);
+      canvas.addEventListener('mousemove', draw);
+      // Events สำหรับทัชสกรีน (มือถือ)
+      canvas.addEventListener('touchstart', startPositionTouch, {passive: false});
+      canvas.addEventListener('touchend', endPosition);
+      canvas.addEventListener('touchmove', drawTouch, {passive: false});
     }
 
-    // บีบอัดรูปภาพ
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.offsetWidth;
+      canvas.height = 200;
+      clearCanvas(); // เคลียร์ทุกครั้งที่เปิดหน้าต่างใหม่
+    }
+
+    function clearCanvas() {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      isCanvasDrawn = false;
+    }
+
+    function getMousePos(evt) { const rect = canvas.getBoundingClientRect(); return { x: evt.clientX - rect.left, y: evt.clientY - rect.top }; }
+    function getTouchPos(evt) { const rect = canvas.getBoundingClientRect(); return { x: evt.touches[0].clientX - rect.left, y: evt.touches[0].clientY - rect.top }; }
+
+    function startPosition(e) { isDrawing = true; draw(e); }
+    function startPositionTouch(e) { e.preventDefault(); isDrawing = true; drawTouch(e); }
+    function endPosition() { isDrawing = false; ctx.beginPath(); }
+    
+    function draw(e) {
+      if (!isDrawing) return;
+      isCanvasDrawn = true;
+      const pos = getMousePos(e);
+      ctx.lineTo(pos.x, pos.y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(pos.x, pos.y);
+    }
+    function drawTouch(e) {
+      if (!isDrawing) return;
+      e.preventDefault();
+      isCanvasDrawn = true;
+      const pos = getTouchPos(e);
+      ctx.lineTo(pos.x, pos.y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(pos.x, pos.y);
+    }
+
+    /* --- การบันทึกงาน --- */
     function compressImage(file, callback) {
       const reader = new FileReader(); reader.readAsDataURL(file);
       reader.onload = e => {
         const img = new Image(); img.src = e.target.result;
         img.onload = () => {
-          const canvas = document.createElement('canvas'); const scale = Math.min(800 / img.width, 800 / img.height, 1);
-          canvas.width = img.width * scale; canvas.height = img.height * scale;
-          const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          callback(canvas.toDataURL('image/jpeg', 0.7));
+          const canvasImg = document.createElement('canvas'); const scale = Math.min(800 / img.width, 800 / img.height, 1);
+          canvasImg.width = img.width * scale; canvasImg.height = img.height * scale;
+          const ctxImg = canvasImg.getContext('2d'); ctxImg.drawImage(img, 0, 0, canvasImg.width, canvasImg.height);
+          callback(canvasImg.toDataURL('image/jpeg', 0.7));
         }
       }
     }
 
-    // สร้างงานใหม่
     function submitTask(e) {
       e.preventDefault();
       const btn = document.getElementById('saveBtn'); 
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>กำลังบันทึกข้อมูล...'; 
-      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>กำลังบันทึกข้อมูล...'; btn.disabled = true;
 
       const data = {
         title: document.getElementById('f_title').value, branch: document.getElementById('f_branch').value,
         format: document.getElementById('f_format').value, deadline: document.getElementById('f_deadline').value,
         priority: document.getElementById('f_priority').value, department: document.getElementById('f_department').value,
-        details: document.getElementById('f_details').value, imageBase64: ""
+        details: document.getElementById('f_details').value, 
+        imageBase64: "", drawBase64: ""
       };
+
+      // ถ้าระบบตรวจพบว่ามีการวาดเส้น ให้ดึงข้อมูลภาพจาก Canvas
+      if (isCanvasDrawn) {
+        data.drawBase64 = canvas.toDataURL('image/png');
+      }
 
       const fileInput = document.getElementById('f_image');
       if (fileInput.files.length > 0) { 
@@ -510,27 +488,25 @@
     }
 
     function sendData(data, btn) {
-      fetch(API_URL, {
-        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'saveTask', taskData: data })
-      })
+      fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveTask', taskData: data }) })
       .then(res => res.json())
       .then(result => {
         if(result.status === 'success') {
-          document.getElementById('taskForm').reset();
-          document.getElementById('f_format').value = ''; 
-          loadTasks(); 
-          showSection('dashboard-sec');
-        } else { 
-          alert("พบข้อผิดพลาดจากเซิร์ฟเวอร์: " + result.message); 
-        }
-      })
-      .catch(() => alert("ไม่สามารถส่งข้อมูลได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต"))
-      .finally(() => { 
-        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up me-2"></i>บันทึกข้อมูล'; 
-        btn.disabled = false; 
-      });
+          document.getElementById('taskForm').reset(); clearCanvas();
+          loadTasks(); showSection('dashboard-sec');
+        } else { alert("พบข้อผิดพลาด: " + result.message); }
+      }).finally(() => { btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up me-2"></i>บันทึกข้อมูล'; btn.disabled = false; });
     }
+
+    let recognizing = false; let recognition;
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'th-TH'; recognition.interimResults = false;
+      recognition.onresult = function(e) { document.getElementById('f_details').value += e.results[0][0].transcript + " "; };
+      recognition.onend = function() { recognizing = false; document.getElementById('micBtn').classList.remove('recording'); };
+      recognition.onerror = function() { alert("ไม่สามารถใช้ไมค์ได้"); recognizing = false; document.getElementById('micBtn').classList.remove('recording'); };
+    } else { document.getElementById('micBtn').style.display = 'none'; }
+    function toggleMic() { if (!recognition) return; if (recognizing) { recognition.stop(); return; } recognition.start(); recognizing = true; document.getElementById('micBtn').classList.add('recording'); }
   </script>
 </body>
 </html>
