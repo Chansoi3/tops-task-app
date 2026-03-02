@@ -31,11 +31,8 @@
     .fab-container { position: fixed; bottom: 30px; right: 20px; z-index: 1040; }
     .fab-btn { width: 65px; height: 65px; border-radius: 50%; background: linear-gradient(135deg, #d32f2f, #b71c1c); color: white; display: flex; justify-content: center; align-items: center; box-shadow: 0 6px 15px rgba(211, 47, 47, 0.4); font-size: 1.8rem; border: none; }
     .fab-btn:active { transform: scale(0.9); }
-    
     .clickable-img { cursor: pointer; transition: 0.2s; }
     .clickable-img:active { transform: scale(0.95); opacity: 0.8; }
-    
-    /* สไตล์สำหรับ Canvas เต็มจอ */
     #canvasContainer { overflow: hidden; background-color: #fff; background-image: radial-gradient(#d3d3d3 1px, transparent 1px); background-size: 20px 20px; }
     #drawingCanvas { display: block; touch-action: none; cursor: crosshair; }
   </style>
@@ -54,9 +51,7 @@
   </nav>
 
   <div class="fab-container" id="fabMain">
-    <button class="fab-btn" onclick="showSection('add-task-sec')">
-      <i class="fa-solid fa-plus"></i>
-    </button>
+    <button class="fab-btn" onclick="showSection('add-task-sec')"><i class="fa-solid fa-plus"></i></button>
   </div>
 
   <div class="offcanvas offcanvas-start border-0 shadow" tabindex="-1" id="sidebarMenu">
@@ -64,12 +59,17 @@
       <h6 class="offcanvas-title fw-bold text-dark"><i class="fa-solid fa-layer-group me-2 text-danger"></i>เมนูหลัก</h6>
       <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
     </div>
-    <div class="offcanvas-body p-0">
-      <div class="list-group list-group-flush mt-2">
+    <div class="offcanvas-body p-0 d-flex flex-column h-100">
+      <div class="list-group list-group-flush mt-2 flex-grow-1">
         <button class="list-group-item list-group-item-action py-3 fw-bold text-danger border-0" onclick="setFilterStatus('หน้าแรก')" data-bs-dismiss="offcanvas"><i class="fa-solid fa-fire fa-beat-fade me-3 w-20px text-center"></i> งานเร่งด่วน</button>
         <button class="list-group-item list-group-item-action py-3 border-0 text-dark" onclick="setFilterStatus('งานใหม่')" data-bs-dismiss="offcanvas"><i class="fa-solid fa-asterisk fa-spin me-3 w-20px text-center text-info"></i> งานใหม่</button>
         <button class="list-group-item list-group-item-action py-3 border-0 text-dark" onclick="setFilterStatus('กำลังดำเนินงาน')" data-bs-dismiss="offcanvas"><i class="fa-solid fa-spinner fa-spin-pulse me-3 w-20px text-center text-warning"></i> กำลังดำเนินงาน</button>
         <button class="list-group-item list-group-item-action py-3 border-0 text-dark" onclick="setFilterStatus('เสร็จสิ้น')" data-bs-dismiss="offcanvas"><i class="fa-solid fa-circle-check me-3 w-20px text-center text-success"></i> เสร็จสิ้น</button>
+      </div>
+      <div class="list-group list-group-flush border-top">
+        <button class="list-group-item list-group-item-action py-3 border-0 text-secondary fw-bold" onclick="setFilterStatus('ถูกลบ')" data-bs-dismiss="offcanvas">
+          <i class="fa-solid fa-trash-can me-3 w-20px text-center"></i> ถังขยะ (งานที่ถูกลบ)
+        </button>
       </div>
     </div>
   </div>
@@ -103,7 +103,6 @@
             <label class="form-label fw-bold">หัวข้อรายการ</label>
             <input type="text" class="form-control" id="f_title" required>
           </div>
-          
           <div class="mb-3">
             <label class="form-label fw-bold">สาขาที่ปฏิบัติงาน</label>
             <select class="form-select" id="f_branch" onchange="autoSelectFormat()" required>
@@ -113,7 +112,6 @@
           <div class="d-none">
             <select id="f_format"><option value=""></option><option value="CO">CO</option><option value="FC">FC</option></select>
           </div>
-
           <div class="row">
             <div class="col-md-6 mb-3">
               <label class="form-label fw-bold">กำหนดเสร็จสิ้น</label>
@@ -128,13 +126,11 @@
               </select>
             </div>
           </div>
-          
           <div class="mb-3">
             <label class="form-label fw-bold">แผนกผู้รับผิดชอบ</label>
             <input type="text" class="form-control" id="f_department" list="deptOptions" placeholder="พิมพ์ชื่อแผนก..." required autocomplete="off">
             <datalist id="deptOptions"></datalist>
           </div>
-
           <div class="mb-3">
             <label class="form-label fw-bold d-flex justify-content-between align-items-center w-100">
               รายละเอียดการดำเนินงาน
@@ -146,14 +142,12 @@
             <button type="button" class="btn btn-outline-primary w-100 py-2 fw-bold" onclick="openDrawModal()" style="border-radius: 8px; border-style: dashed;">
               <i class="fa-solid fa-signature me-2"></i> กดเพื่อเปิดกระดานจดโน้ตเต็มจอ
             </button>
-            
             <div id="drawPreviewContainer" class="mt-3 text-center d-none position-relative bg-light border rounded-3 p-2">
               <span class="badge bg-success position-absolute top-0 start-0 m-2 shadow-sm"><i class="fa-solid fa-check"></i> บันทึกโน้ตแล้ว</span>
               <img id="drawPreview" src="" class="img-fluid rounded shadow-sm" style="max-height: 150px;">
               <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2 rounded-circle shadow" onclick="removeDrawing()" title="ลบโน้ตนี้"><i class="fa-solid fa-xmark"></i></button>
             </div>
           </div>
-
           <div class="mb-4">
             <label class="form-label fw-bold"><i class="fa-solid fa-image"></i> ภาพถ่ายประกอบ (ถ้ามี)</label>
             <input type="file" class="form-control" id="f_image" accept="image/*">
@@ -170,7 +164,7 @@
     <div class="modal-dialog modal-fullscreen">
       <div class="modal-content">
         <div class="modal-header bg-dark text-white p-3 border-0">
-          <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-nib text-warning me-2"></i> กระดานจดโน้ต / ลายเซ็น</h5>
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-nib text-warning me-2"></i> กระดานจดโน้ต</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body p-0 position-relative" id="canvasContainer">
@@ -214,6 +208,7 @@
               <option value="เปิดงานใหม่" class="d-none">เปิดงานใหม่</option>
               <option value="กำลังดำเนินงาน">กำลังดำเนินงาน</option>
               <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+              <option value="ถูกลบ">ถูกลบ (ย้ายลงถังขยะ)</option>
             </select>
           </div>
           <div class="mb-3">
@@ -227,8 +222,12 @@
             <img id="m_draw_image" src="" class="img-fluid rounded-3 border shadow-sm clickable-img d-none" style="max-height: 180px;" onclick="viewFullImage(this.src)">
           </div>
         </div>
-        <div class="modal-footer border-top-0 px-4 pb-4">
-          <button type="button" class="btn btn-dark w-100 fw-bold py-2 rounded-pill shadow-sm" onclick="saveTaskEdit()" id="modalSaveBtn">
+        
+        <div class="modal-footer border-top-0 px-4 pb-4 d-flex">
+          <button type="button" class="btn btn-outline-danger fw-bold py-2 rounded-pill shadow-sm" onclick="deleteTaskAction()" id="modalDeleteBtn">
+            <i class="fa-solid fa-trash-can"></i> ลบ
+          </button>
+          <button type="button" class="btn btn-dark flex-grow-1 fw-bold py-2 rounded-pill shadow-sm ms-2" onclick="saveTaskEdit()" id="modalSaveBtn">
             <i class="fa-solid fa-floppy-disk me-2"></i>บันทึกการปรับปรุง
           </button>
         </div>
@@ -249,10 +248,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // 🔴🔴🔴 นำ URL จาก Apps Script มาวางตรงนี้ 🔴🔴🔴
+    // 🔴 วาง URL จาก Apps Script ตรงนี้ 🔴
     const API_URL = "https://script.google.com/macros/s/AKfycbwBFTLE8Q_7T63l6dzkZuqqmsRnQvQRby0H6tcICOH9Ld2onRTJ00bYQ9jDGTJaC9bdDg/exec";
 
-    // ข้อมูลสาขา
     const rawBranches = [
       "5285 แฟลตทหารเรือบางนา", "4697 พระราม 9 ซอย 49", "0877 ลาดพร้าว 102", "5291 บ้านเทพารักษ์", 
       "4278 ลาดพร้าว 132", "3118 ซอยเทพารักษ์ 8", "5298 ฟู้ด สต็อก พัฒนาการ 32", "5219 เฉลิมพระเกียรติ 30 แยก 14", 
@@ -261,7 +259,6 @@
       "3106 ท็อปส์ เดลี่ เดอะพาร์คแลนด์", "3119 รามคำแหง 29.2", "2288 รามคำแหง 8 แยก 4"
     ];
 
-    // ข้อมูลแผนกมาตรฐาน (จะนำไปรวมกับแผนกในฐานข้อมูล)
     const standardDepartments = [
       "IT (ไอที)", "HR (บุคคล)", "Accounting (บัญชี)", "Finance (การเงิน)", "Marketing (การตลาด)", 
       "Operations (ปฏิบัติการ)", "Purchasing (จัดซื้อ)", "Maintenance (ซ่อมบำรุง)", "Construction (ก่อสร้าง)", 
@@ -270,7 +267,7 @@
 
     let allTasksData = [];
     let currentStatusFilter = 'หน้าแรก';
-    let currentDrawBase64 = ""; // ตัวแปรเก็บภาพที่วาด
+    let currentDrawBase64 = ""; 
     let isCanvasDrawn = false;
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -311,23 +308,22 @@
     function loadTasks() {
       const list = document.getElementById('task-list');
       list.innerHTML = `<div class="text-center text-muted mt-5"><div class="spinner-border text-danger mb-2"></div><p>กำลังเชื่อมต่อฐานข้อมูล...</p></div>`;
-      fetch(API_URL)
-        .then(res => res.json())
-        .then(tasks => {
-          if (tasks.error) return;
-          allTasksData = tasks;
-          updateDepartmentSuggestion(); 
-          applyFilters(); 
-        })
-        .catch(err => { list.innerHTML = `<div class="alert alert-danger shadow-sm border-0"><i class="fa-solid fa-triangle-exclamation"></i> ไม่สามารถเชื่อมต่อฐานข้อมูลได้</div>`; });
+      fetch(API_URL).then(res => res.json()).then(tasks => {
+        if (tasks.error) return;
+        allTasksData = tasks;
+        updateDepartmentSuggestion(); 
+        applyFilters(); 
+      }).catch(err => { list.innerHTML = `<div class="alert alert-danger shadow-sm border-0"><i class="fa-solid fa-triangle-exclamation"></i> ไม่สามารถเชื่อมต่อฐานข้อมูลได้</div>`; });
     }
 
     function setFilterStatus(status) {
       currentStatusFilter = status;
-      let titleIcon = status === 'หน้าแรก' ? '<i class="fa-solid fa-fire fa-beat text-danger me-2"></i>รายการงานเร่งด่วน' :
-                      status === 'งานใหม่' ? '<i class="fa-solid fa-asterisk fa-spin text-info me-2"></i>รายการงานใหม่' :
-                      status === 'กำลังดำเนินงาน' ? '<i class="fa-solid fa-spinner fa-spin-pulse text-warning me-2"></i>อยู่ระหว่างดำเนินการ' :
-                      '<i class="fa-solid fa-circle-check text-success me-2"></i>รายการที่เสร็จสิ้น';
+      let titleIcon = '';
+      if(status === 'หน้าแรก') titleIcon = '<i class="fa-solid fa-fire fa-beat text-danger me-2"></i>รายการงานเร่งด่วน';
+      else if(status === 'ถูกลบ') titleIcon = '<i class="fa-solid fa-trash-can text-secondary me-2"></i>ถังขยะ (รายการที่ถูกลบ)';
+      else if(status === 'งานใหม่') titleIcon = '<i class="fa-solid fa-asterisk fa-spin text-info me-2"></i>รายการงานใหม่';
+      else if(status === 'กำลังดำเนินงาน') titleIcon = '<i class="fa-solid fa-spinner fa-spin-pulse text-warning me-2"></i>อยู่ระหว่างดำเนินการ';
+      else titleIcon = '<i class="fa-solid fa-circle-check text-success me-2"></i>รายการที่เสร็จสิ้น';
       document.getElementById('dashboard-title').innerHTML = titleIcon;
       applyFilters();
     }
@@ -336,8 +332,13 @@
       const branchVal = document.getElementById('branchFilter').value;
       let filtered = allTasksData;
       if (branchVal !== '') filtered = filtered.filter(t => t.branch === branchVal);
-      if (currentStatusFilter === 'หน้าแรก') filtered = filtered.filter(t => t.status !== 'เสร็จสิ้น').slice(0, 10); 
-      else filtered = filtered.filter(t => t.status === currentStatusFilter || (currentStatusFilter === 'งานใหม่' && t.status === 'เปิดงานใหม่'));
+      
+      // การกรอง (หน้าแรก จะซ่อนงานที่เสร็จและถูกลบ)
+      if (currentStatusFilter === 'หน้าแรก') {
+        filtered = filtered.filter(t => t.status !== 'เสร็จสิ้น' && t.status !== 'ถูกลบ').slice(0, 10); 
+      } else {
+        filtered = filtered.filter(t => t.status === currentStatusFilter || (currentStatusFilter === 'งานใหม่' && t.status === 'เปิดงานใหม่'));
+      }
       renderTasks(filtered);
     }
 
@@ -348,19 +349,27 @@
       let html = '';
       tasks.forEach(task => {
         let borderClass = task.priority === 'สูง' ? 'priority-high' : (task.priority === 'ปานกลาง' ? 'priority-medium' : 'priority-low');
-        let statusBadge = task.status.includes('ใหม่') ? '<span class="status-badge bg-info text-dark shadow-sm"><i class="fa-solid fa-asterisk fa-spin"></i> งานใหม่</span>' :
-                          task.status === 'เสร็จสิ้น' ? '<span class="status-badge bg-success text-white shadow-sm"><i class="fa-solid fa-check"></i> เสร็จสิ้น</span>' :
-                          '<span class="status-badge bg-warning text-dark shadow-sm"><i class="fa-solid fa-spinner fa-spin-pulse"></i> ดำเนินการ</span>';
+        
+        let statusBadge = '';
+        if(task.status === 'ถูกลบ') statusBadge = '<span class="status-badge bg-secondary text-white shadow-sm"><i class="fa-solid fa-trash-can"></i> ถูกลบ</span>';
+        else if(task.status.includes('ใหม่')) statusBadge = '<span class="status-badge bg-info text-dark shadow-sm"><i class="fa-solid fa-asterisk fa-spin"></i> งานใหม่</span>';
+        else if(task.status === 'เสร็จสิ้น') statusBadge = '<span class="status-badge bg-success text-white shadow-sm"><i class="fa-solid fa-check"></i> เสร็จสิ้น</span>';
+        else statusBadge = '<span class="status-badge bg-warning text-dark shadow-sm"><i class="fa-solid fa-spinner fa-spin-pulse"></i> ดำเนินการ</span>';
 
         let priorityBadge = task.priority === 'สูง' ? '<span class="badge bg-danger px-2 py-1 shadow-sm">สูง</span>' :
                             task.priority === 'ปานกลาง' ? '<span class="badge bg-warning text-dark px-2 py-1 shadow-sm">ปานกลาง</span>' :
                             '<span class="badge bg-success px-2 py-1 shadow-sm">ต่ำ</span>';
 
+        // 🔴 เพิ่มวันที่ ต่อท้ายคำว่าเหลือกี่วัน
+        let deadlineStr = new Date(task.deadline).toLocaleDateString('th-TH');
         let daysLeft = Math.ceil((new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24));
-        let timeDisplay = task.status === 'เสร็จสิ้น' ? `<span class="badge bg-light text-success border border-success p-2">ปิดงานแล้ว</span>` :
-                          daysLeft < 0 ? `<span class="badge bg-danger shadow-sm p-2"><i class="fa-solid fa-triangle-exclamation fa-fade"></i> เลยกำหนด ${Math.abs(daysLeft)} วัน</span>` :
-                          daysLeft <= 3 ? `<span class="badge bg-warning text-dark shadow-sm p-2"><i class="fa-regular fa-bell fa-shake"></i> เหลือ ${daysLeft} วัน</span>` :
-                          `<span class="badge bg-light text-secondary border p-2">ส่ง: ${new Date(task.deadline).toLocaleDateString('th-TH')}</span>`;
+        let timeDisplay = '';
+        
+        if (task.status === 'เสร็จสิ้น') timeDisplay = `<span class="badge bg-light text-success border border-success p-2">ปิดงานแล้ว (${deadlineStr})</span>`;
+        else if (task.status === 'ถูกลบ') timeDisplay = `<span class="badge bg-light text-secondary border border-secondary p-2"><i class="fa-solid fa-ban"></i> ยกเลิก (${deadlineStr})</span>`;
+        else if (daysLeft < 0) timeDisplay = `<span class="badge bg-danger shadow-sm p-2"><i class="fa-solid fa-triangle-exclamation fa-fade"></i> เลยกำหนด ${Math.abs(daysLeft)} วัน! (${deadlineStr})</span>`;
+        else if (daysLeft <= 3) timeDisplay = `<span class="badge bg-warning text-dark shadow-sm p-2"><i class="fa-regular fa-bell fa-shake"></i> เหลือ ${daysLeft} วัน (${deadlineStr})</span>`;
+        else timeDisplay = `<span class="badge bg-light text-secondary border p-2">ส่ง: ${deadlineStr}</span>`;
 
         let hasImage = (task.imageUrl || task.drawUrl) ? ' <i class="fa-solid fa-paperclip text-primary ms-1"></i>' : '';
 
@@ -397,16 +406,13 @@
       let showContainer = false;
       if (task.imageUrl) { imgElement.src = task.imageUrl; imgElement.classList.remove('d-none'); showContainer = true; } else { imgElement.classList.add('d-none'); }
       if (task.drawUrl) { drawElement.src = task.drawUrl; drawElement.classList.remove('d-none'); showContainer = true; } else { drawElement.classList.add('d-none'); }
-      
       if(showContainer) imgContainer.classList.remove('d-none'); else imgContainer.classList.add('d-none');
+      
       taskModal.show();
     }
 
     const imageViewerModal = new bootstrap.Modal(document.getElementById('imageViewerModal'));
-    function viewFullImage(src) {
-      document.getElementById('fullImageSrc').src = src;
-      imageViewerModal.show();
-    }
+    function viewFullImage(src) { document.getElementById('fullImageSrc').src = src; imageViewerModal.show(); }
 
     function saveTaskEdit() {
       const btn = document.getElementById('modalSaveBtn');
@@ -420,94 +426,51 @@
       .finally(() => { btn.innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i>บันทึกการปรับปรุง'; btn.disabled = false; });
     }
 
-    /* --- ระบบกระดานวาดเขียน (Modal เต็มจอ) --- */
+    // 🔴 ฟังก์ชันเมื่อกดปุ่ม ลบงาน
+    function deleteTaskAction() {
+      if(!confirm("คุณแน่ใจหรือไม่ว่าต้องการลบงานนี้? (สามารถดูกลับได้ที่เมนูถังขยะ)")) return;
+      
+      const btn = document.getElementById('modalDeleteBtn');
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true;
+      const row = document.getElementById('m_row').value;
+
+      fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteTask', rowNumber: row }) })
+      .then(() => { taskModal.hide(); loadTasks(); })
+      .finally(() => { btn.innerHTML = '<i class="fa-solid fa-trash-can"></i> ลบ'; btn.disabled = false; });
+    }
+
+    /* --- Canvas --- */
     const drawModalEl = document.getElementById('drawModal');
     const drawModal = new bootstrap.Modal(drawModalEl);
     const canvas = document.getElementById('drawingCanvas');
     const ctx = canvas.getContext('2d');
     let isDrawing = false;
 
-    function openDrawModal() {
-      drawModal.show();
-    }
-
-    // เมื่อ Modal เปิดขึ้นมาเต็มจอ ให้คำนวณขนาดกระดานใหม่
-    drawModalEl.addEventListener('shown.bs.modal', function () {
-      resizeCanvas();
-    });
+    function openDrawModal() { drawModal.show(); }
+    drawModalEl.addEventListener('shown.bs.modal', function () { resizeCanvas(); });
 
     function initCanvas() {
-      canvas.addEventListener('mousedown', startPosition);
-      canvas.addEventListener('mouseup', endPosition);
-      canvas.addEventListener('mousemove', draw);
-      canvas.addEventListener('touchstart', startPositionTouch, {passive: false});
-      canvas.addEventListener('touchend', endPosition);
-      canvas.addEventListener('touchmove', drawTouch, {passive: false});
+      canvas.addEventListener('mousedown', startPosition); canvas.addEventListener('mouseup', endPosition); canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('touchstart', startPositionTouch, {passive: false}); canvas.addEventListener('touchend', endPosition); canvas.addEventListener('touchmove', drawTouch, {passive: false});
     }
-
     function resizeCanvas() {
-      const container = document.getElementById('canvasContainer');
-      canvas.width = container.clientWidth;
-      canvas.height = container.clientHeight;
-      ctx.lineWidth = 3;
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = '#d32f2f'; // หมึกสีแดง
-      
-      // ถ้าย้อนกลับมาเปิดกระดาน ให้วาดรูปเดิมลงไป
-      if(currentDrawBase64) {
-        let img = new Image();
-        img.onload = function() { ctx.drawImage(img, 0, 0); }
-        img.src = currentDrawBase64;
-      } else {
-        clearCanvas();
-      }
+      const container = document.getElementById('canvasContainer'); canvas.width = container.clientWidth; canvas.height = container.clientHeight;
+      ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.strokeStyle = '#d32f2f'; 
+      if(currentDrawBase64) { let img = new Image(); img.onload = function() { ctx.drawImage(img, 0, 0); }; img.src = currentDrawBase64; } else { clearCanvas(); }
     }
-
-    function clearCanvas() {
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      isCanvasDrawn = false;
-      currentDrawBase64 = "";
-    }
-
+    function clearCanvas() { ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height); isCanvasDrawn = false; currentDrawBase64 = ""; }
     function getMousePos(evt) { const rect = canvas.getBoundingClientRect(); return { x: evt.clientX - rect.left, y: evt.clientY - rect.top }; }
     function getTouchPos(evt) { const rect = canvas.getBoundingClientRect(); return { x: evt.touches[0].clientX - rect.left, y: evt.touches[0].clientY - rect.top }; }
-
     function startPosition(e) { isDrawing = true; draw(e); }
     function startPositionTouch(e) { e.preventDefault(); isDrawing = true; drawTouch(e); }
     function endPosition() { isDrawing = false; ctx.beginPath(); }
-    
-    function draw(e) {
-      if (!isDrawing) return;
-      isCanvasDrawn = true;
-      const pos = getMousePos(e);
-      ctx.lineTo(pos.x, pos.y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(pos.x, pos.y);
-    }
-    function drawTouch(e) {
-      if (!isDrawing) return;
-      e.preventDefault();
-      isCanvasDrawn = true;
-      const pos = getTouchPos(e);
-      ctx.lineTo(pos.x, pos.y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(pos.x, pos.y);
-    }
-
+    function draw(e) { if (!isDrawing) return; isCanvasDrawn = true; const pos = getMousePos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); }
+    function drawTouch(e) { if (!isDrawing) return; e.preventDefault(); isCanvasDrawn = true; const pos = getTouchPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); }
     function saveDrawing() {
-      if(isCanvasDrawn) {
-        currentDrawBase64 = canvas.toDataURL('image/png');
-        document.getElementById('drawPreview').src = currentDrawBase64;
-        document.getElementById('drawPreviewContainer').classList.remove('d-none');
-      } else {
-        removeDrawing();
-      }
+      if(isCanvasDrawn) { currentDrawBase64 = canvas.toDataURL('image/png'); document.getElementById('drawPreview').src = currentDrawBase64; document.getElementById('drawPreviewContainer').classList.remove('d-none'); } else { removeDrawing(); }
       drawModal.hide();
     }
-
-    function removeDrawing() {
-      currentDrawBase64 = "";
-      isCanvasDrawn = false;
-      document.getElementById('drawPreviewContainer').classList.add('d-none');
-      clearCanvas();
-    }
+    function removeDrawing() { currentDrawBase64 = ""; isCanvasDrawn = false; document.getElementById('drawPreviewContainer').classList.add('d-none'); clearCanvas(); }
 
     function compressImage(file, callback) {
       const reader = new FileReader(); reader.readAsDataURL(file);
@@ -532,21 +495,16 @@
         format: document.getElementById('f_format').value, deadline: document.getElementById('f_deadline').value,
         priority: document.getElementById('f_priority').value, department: document.getElementById('f_department').value,
         details: document.getElementById('f_details').value, 
-        imageBase64: "", drawBase64: currentDrawBase64 // ส่งรูป Note (ถ้ามี)
+        imageBase64: "", drawBase64: currentDrawBase64
       };
 
       const fileInput = document.getElementById('f_image');
-      if (fileInput.files.length > 0) { 
-        compressImage(fileInput.files[0], (base64) => { data.imageBase64 = base64; sendData(data, btn); }); 
-      } else { 
-        sendData(data, btn); 
-      }
+      if (fileInput.files.length > 0) { compressImage(fileInput.files[0], (base64) => { data.imageBase64 = base64; sendData(data, btn); }); } else { sendData(data, btn); }
     }
 
     function sendData(data, btn) {
       fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveTask', taskData: data }) })
-      .then(res => res.json())
-      .then(result => {
+      .then(res => res.json()).then(result => {
         if(result.status === 'success') {
           document.getElementById('taskForm').reset(); removeDrawing();
           loadTasks(); showSection('dashboard-sec');
