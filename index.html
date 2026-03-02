@@ -16,27 +16,19 @@
   <style>
     body { background-color: #f8f9fa; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
     
-    /* Navbar Gradient */
     .navbar { background: linear-gradient(90deg, #d32f2f 0%, #e53935 100%); color: white; padding-top: env(safe-area-inset-top); }
     
-    /* Card Styles */
     .task-card { 
-      border-radius: 12px; 
-      border: none; 
-      border-left: 6px solid #dee2e6; 
-      transition: all 0.2s ease-in-out; 
-      cursor: pointer; 
-      background: #ffffff;
+      border-radius: 12px; border: none; border-left: 6px solid #dee2e6; 
+      transition: all 0.2s ease-in-out; cursor: pointer; background: #ffffff;
     }
     .task-card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.05) !important; }
     .task-card:active { transform: scale(0.98); }
     
-    /* Priority Borders */
     .priority-high { border-left-color: #dc3545; }
     .priority-medium { border-left-color: #ffc107; }
     .priority-low { border-left-color: #28a745; }
     
-    /* Custom Elements */
     .status-badge { font-weight: 500; letter-spacing: 0.3px; padding: 6px 12px; border-radius: 20px; }
     .mic-btn { cursor: pointer; color: #d32f2f; font-size: 1rem; transition: 0.3s; padding: 5px 10px; border-radius: 20px; background: #ffeeee; font-weight: 500; }
     .mic-btn:hover { background: #ffdddd; }
@@ -44,10 +36,20 @@
     
     @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); } }
     
-    /* Form Customization */
     .form-control, .form-select { border-radius: 8px; border: 1px solid #ced4da; padding: 10px 15px; }
     .form-control:focus, .form-select:focus { border-color: #d32f2f; box-shadow: 0 0 0 0.25rem rgba(211, 47, 47, 0.25); }
     label.fw-bold { color: #495057; font-size: 0.95rem; }
+
+    /* --- ดีไซน์ปุ่มลอยมุมขวาล่าง (Floating Action Button) --- */
+    .fab-container { position: fixed; bottom: 30px; right: 20px; z-index: 1050; }
+    .fab-btn { 
+      width: 65px; height: 65px; border-radius: 50%; 
+      background: linear-gradient(135deg, #d32f2f, #b71c1c); color: white; 
+      display: flex; justify-content: center; align-items: center; 
+      box-shadow: 0 6px 15px rgba(211, 47, 47, 0.4); 
+      font-size: 1.8rem; transition: all 0.2s; border: none; 
+    }
+    .fab-btn:active { transform: scale(0.9); box-shadow: 0 2px 8px rgba(211, 47, 47, 0.4); }
   </style>
 </head>
 <body>
@@ -58,13 +60,16 @@
         <button class="btn btn-link text-white p-0 me-3 border-0 text-decoration-none" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
           <i class="fa-solid fa-bars fs-4"></i>
         </button>
-        <span class="navbar-brand mb-0 h5 fw-bold tracking-wide">Tops Task Management</span>
+        <span class="navbar-brand mb-0 h5 fw-bold tracking-wide">Tops Task</span>
       </div>
-      <button class="btn btn-light text-danger fw-bold btn-sm px-3 rounded-pill shadow-sm" onclick="showSection('add-task-sec')">
-        <i class="fa-solid fa-plus me-1"></i> เพิ่มงาน
-      </button>
     </div>
   </nav>
+
+  <div class="fab-container" id="fabMain">
+    <button class="fab-btn" onclick="showSection('add-task-sec')">
+      <i class="fa-solid fa-plus"></i>
+    </button>
+  </div>
 
   <div class="offcanvas offcanvas-start border-0 shadow" tabindex="-1" id="sidebarMenu">
     <div class="offcanvas-header bg-light border-bottom">
@@ -113,7 +118,7 @@
       </div>
     </div>
 
-    <div id="add-task-sec" class="card shadow-sm border-0 d-none rounded-4">
+    <div id="add-task-sec" class="card shadow-sm border-0 d-none rounded-4 mb-5">
       <div class="card-body p-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h5 class="card-title mb-0 fw-bold text-dark">สร้างรายการงานใหม่</h5>
@@ -149,9 +154,9 @@
             <div class="col-md-4 mb-3">
               <label class="form-label fw-bold">ระดับความสำคัญ</label>
               <select class="form-select" id="f_priority" required>
-                <option value="สูง">ระดับสูง (เร่งด่วน)</option>
-                <option value="ปานกลาง">ระดับปานกลาง</option>
-                <option value="ต่ำ">ระดับต่ำ</option>
+                <option value="สูง">🔴 ระดับสูง (เร่งด่วน)</option>
+                <option value="ปานกลาง">🟡 ระดับปานกลาง</option>
+                <option value="ต่ำ">🟢 ระดับต่ำ</option>
               </select>
             </div>
             <div class="col-md-4 mb-3">
@@ -171,7 +176,6 @@
           <div class="mb-4">
             <label class="form-label fw-bold">ภาพถ่ายประกอบ (ถ้ามี)</label>
             <input type="file" class="form-control" id="f_image" accept="image/*">
-            <small class="text-muted mt-1 d-block">ระบบจะดำเนินการบีบอัดขนาดภาพอัตโนมัติ</small>
           </div>
           <button type="submit" class="btn btn-danger w-100 fw-bold py-2 rounded-pill shadow-sm" id="saveBtn">
             <i class="fa-solid fa-cloud-arrow-up me-2"></i>บันทึกข้อมูล
@@ -195,8 +199,8 @@
               <div class="col-7 fw-bold text-dark"><span id="m_branch"></span> (<span id="m_format"></span>)</div>
             </div>
             <div class="row">
-              <div class="col-5 text-muted small">กำหนดเสร็จ:</div>
-              <div class="col-7 fw-bold text-danger"><i class="fa-regular fa-calendar-xmark me-1"></i> <span id="m_deadline"></span></div>
+              <div class="col-5 text-muted small">กำหนดส่งเดิม:</div>
+              <div class="col-7 fw-bold text-secondary"><i class="fa-regular fa-calendar me-1"></i> <span id="m_deadline"></span></div>
             </div>
           </div>
           
@@ -279,6 +283,10 @@
       document.getElementById('dashboard-sec').classList.add('d-none');
       document.getElementById('add-task-sec').classList.add('d-none');
       document.getElementById(id).classList.remove('d-none');
+      
+      // ซ่อน/แสดง ปุ่มลอยมุมขวาล่าง
+      document.getElementById('fabMain').style.display = (id === 'dashboard-sec') ? 'block' : 'none';
+      
       if(id === 'dashboard-sec') applyFilters();
     }
 
@@ -339,7 +347,7 @@
       tasks.forEach(task => {
         let borderClass = task.priority === 'สูง' ? 'priority-high' : (task.priority === 'ปานกลาง' ? 'priority-medium' : 'priority-low');
         
-        // การตั้งค่าป้ายสถานะและไอคอนเคลื่อนไหว
+        // --- 1. ป้ายแสดงสถานะ (มุมขวาบนของการ์ด) ---
         let statusBadge = '';
         if(task.status.includes('ใหม่')) {
           statusBadge = '<span class="status-badge bg-info text-dark shadow-sm"><i class="fa-solid fa-asterisk fa-spin me-1"></i> งานใหม่</span>';
@@ -349,17 +357,28 @@
           statusBadge = '<span class="status-badge bg-warning text-dark shadow-sm"><i class="fa-solid fa-spinner fa-spin-pulse me-1"></i> ดำเนินการ</span>';
         }
 
-        // การตั้งค่าไอคอนวันที่แจ้งเตือน
+        // --- 2. การแยกสีระดับความสำคัญให้ชัดเจน ---
+        let priorityBadge = '';
+        if(task.priority === 'สูง') {
+          priorityBadge = '<span class="badge bg-danger px-2 py-1 shadow-sm"><i class="fa-solid fa-angles-up"></i> สูง</span>';
+        } else if(task.priority === 'ปานกลาง') {
+          priorityBadge = '<span class="badge bg-warning text-dark px-2 py-1 shadow-sm"><i class="fa-solid fa-equals"></i> ปานกลาง</span>';
+        } else {
+          priorityBadge = '<span class="badge bg-success px-2 py-1 shadow-sm"><i class="fa-solid fa-angles-down"></i> ต่ำ</span>';
+        }
+
+        // --- 3. ไฮไลท์วันที่เหลือ (ยิ่งใกล้ ยิ่งเด่น) ---
         let daysLeft = Math.ceil((new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24));
         let timeDisplay = '';
+        
         if (task.status === 'เสร็จสิ้น') {
-           timeDisplay = `<span class="text-success small fw-bold"><i class="fa-regular fa-calendar-check me-1"></i> ปิดงานแล้ว</span>`;
+           timeDisplay = `<span class="badge bg-light text-success border border-success p-2"><i class="fa-regular fa-calendar-check me-1"></i> ปิดงานแล้ว</span>`;
         } else if (daysLeft < 0) {
-           timeDisplay = `<span class="text-danger small fw-bold"><i class="fa-solid fa-triangle-exclamation fa-fade me-1"></i> เลยกำหนด ${Math.abs(daysLeft)} วัน</span>`;
+           timeDisplay = `<span class="badge bg-danger shadow-sm p-2 fs-6"><i class="fa-solid fa-triangle-exclamation fa-fade me-1"></i> เลยกำหนด ${Math.abs(daysLeft)} วัน!</span>`;
         } else if (daysLeft <= 3) {
-           timeDisplay = `<span class="text-warning text-dark small fw-bold"><i class="fa-regular fa-bell fa-shake me-1"></i> เหลือ ${daysLeft} วัน</span>`;
+           timeDisplay = `<span class="badge bg-warning text-dark shadow-sm p-2"><i class="fa-regular fa-bell fa-shake me-1"></i> เหลืออีก ${daysLeft} วัน</span>`;
         } else {
-           timeDisplay = `<span class="text-secondary small fw-bold"><i class="fa-regular fa-calendar me-1"></i> ${new Date(task.deadline).toLocaleDateString('th-TH')}</span>`;
+           timeDisplay = `<span class="badge bg-light text-secondary border p-2"><i class="fa-regular fa-calendar me-1"></i> กำหนดส่ง: ${new Date(task.deadline).toLocaleDateString('th-TH')}</span>`;
         }
 
         let hasImage = task.imageUrl ? ' <i class="fa-solid fa-paperclip text-secondary ms-1" title="มีไฟล์แนบ"></i>' : '';
@@ -374,7 +393,7 @@
               <p class="mb-1 text-muted small"><i class="fa-solid fa-location-dot me-1 text-secondary"></i> ${task.branch}</p>
               <div class="d-flex justify-content-between align-items-center mt-3 border-top pt-2">
                 ${timeDisplay}
-                <span class="text-muted small">ระดับ: ${task.priority}</span>
+                ${priorityBadge}
               </div>
             </div>
           </div>
@@ -429,7 +448,6 @@
       });
     }
 
-    // Web Speech API
     let recognizing = false; let recognition;
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -445,7 +463,6 @@
       recognition.start(); recognizing = true; document.getElementById('micBtn').classList.add('recording');
     }
 
-    // Image Compression
     function compressImage(file, callback) {
       const reader = new FileReader(); reader.readAsDataURL(file);
       reader.onload = e => {
