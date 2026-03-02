@@ -32,10 +32,12 @@
     .fab-btn { width: 65px; height: 65px; border-radius: 50%; background: linear-gradient(135deg, #d32f2f, #b71c1c); color: white; display: flex; justify-content: center; align-items: center; box-shadow: 0 6px 15px rgba(211, 47, 47, 0.4); font-size: 1.8rem; border: none; }
     .fab-btn:active { transform: scale(0.9); }
     
-    /* สไตล์กระดานวาดเขียน */
-    #drawingCanvas { border: 2px dashed #ccc; border-radius: 8px; background: #fff; width: 100%; height: 200px; touch-action: none; cursor: crosshair; }
     .clickable-img { cursor: pointer; transition: 0.2s; }
     .clickable-img:active { transform: scale(0.95); opacity: 0.8; }
+    
+    /* สไตล์สำหรับ Canvas เต็มจอ */
+    #canvasContainer { overflow: hidden; background-color: #fff; background-image: radial-gradient(#d3d3d3 1px, transparent 1px); background-size: 20px 20px; }
+    #drawingCanvas { display: block; touch-action: none; cursor: crosshair; }
   </style>
 </head>
 <body>
@@ -129,7 +131,7 @@
           
           <div class="mb-3">
             <label class="form-label fw-bold">แผนกผู้รับผิดชอบ</label>
-            <input type="text" class="form-control" id="f_department" list="deptOptions" placeholder="พิมพ์เพื่อค้นหาแผนก..." required autocomplete="off">
+            <input type="text" class="form-control" id="f_department" list="deptOptions" placeholder="พิมพ์ชื่อแผนก..." required autocomplete="off">
             <datalist id="deptOptions"></datalist>
           </div>
 
@@ -138,12 +140,17 @@
               รายละเอียดการดำเนินงาน
               <span class="mic-btn shadow-sm" id="micBtn" onclick="toggleMic()"><i class="fa-solid fa-microphone"></i> พูดข้อความ</span>
             </label>
-            <textarea class="form-control mb-2" id="f_details" rows="3" placeholder="ระบุรายละเอียดงาน..."></textarea>
+            <textarea class="form-control mb-3" id="f_details" rows="3" placeholder="ระบุรายละเอียดงาน..."></textarea>
             
-            <label class="form-label fw-bold text-primary mt-2"><i class="fa-solid fa-pen"></i> จด Note ด้วยปากกา</label>
-            <div class="position-relative">
-              <canvas id="drawingCanvas"></canvas>
-              <button type="button" class="btn btn-sm btn-light position-absolute top-0 end-0 m-2 border shadow-sm" onclick="clearCanvas()"><i class="fa-solid fa-eraser"></i> ลบกระดาน</button>
+            <label class="form-label fw-bold text-primary mb-2"><i class="fa-solid fa-pen-nib"></i> บันทึกด้วยการเขียน</label>
+            <button type="button" class="btn btn-outline-primary w-100 py-2 fw-bold" onclick="openDrawModal()" style="border-radius: 8px; border-style: dashed;">
+              <i class="fa-solid fa-signature me-2"></i> กดเพื่อเปิดกระดานจดโน้ตเต็มจอ
+            </button>
+            
+            <div id="drawPreviewContainer" class="mt-3 text-center d-none position-relative bg-light border rounded-3 p-2">
+              <span class="badge bg-success position-absolute top-0 start-0 m-2 shadow-sm"><i class="fa-solid fa-check"></i> บันทึกโน้ตแล้ว</span>
+              <img id="drawPreview" src="" class="img-fluid rounded shadow-sm" style="max-height: 150px;">
+              <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2 rounded-circle shadow" onclick="removeDrawing()" title="ลบโน้ตนี้"><i class="fa-solid fa-xmark"></i></button>
             </div>
           </div>
 
@@ -155,6 +162,24 @@
             <i class="fa-solid fa-cloud-arrow-up me-2"></i>บันทึกข้อมูล
           </button>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="drawModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white p-3 border-0">
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-nib text-warning me-2"></i> กระดานจดโน้ต / ลายเซ็น</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-0 position-relative" id="canvasContainer">
+          <canvas id="drawingCanvas"></canvas>
+        </div>
+        <div class="modal-footer bg-light p-3 d-flex justify-content-between">
+          <button type="button" class="btn btn-outline-danger fw-bold" onclick="clearCanvas()"><i class="fa-solid fa-eraser me-1"></i> ลบกระดาน</button>
+          <button type="button" class="btn btn-primary fw-bold px-4 shadow-sm" onclick="saveDrawing()"><i class="fa-solid fa-check me-1"></i> ยืนยัน / นำไปใช้</button>
+        </div>
       </div>
     </div>
   </div>
@@ -177,9 +202,7 @@
               <div class="col-8 fw-bold text-secondary"><i class="fa-regular fa-calendar me-1"></i> <span id="m_deadline"></span></div>
             </div>
           </div>
-          
           <input type="hidden" id="m_row">
-          
           <div class="mb-3">
             <label class="fw-bold text-dark small mb-1">หัวข้อรายการ</label>
             <input type="text" id="m_title_edit" class="form-control bg-white">
@@ -199,9 +222,9 @@
           </div>
           
           <div id="m_image_container" class="mt-3 text-center d-none">
-            <label class="fw-bold text-dark small d-block text-start mb-2">ภาพประกอบ / Note (กดเพื่อดูรูปเต็ม)</label>
-            <img id="m_image" src="" class="img-fluid rounded-3 border shadow-sm clickable-img mb-2" style="max-height: 200px;" onclick="viewFullImage(this.src)">
-            <img id="m_draw_image" src="" class="img-fluid rounded-3 border shadow-sm clickable-img d-none" style="max-height: 200px;" onclick="viewFullImage(this.src)">
+            <label class="fw-bold text-dark small d-block text-start mb-2">ภาพประกอบ / Note (กดรูปเพื่อขยายเต็มจอ)</label>
+            <img id="m_image" src="" class="img-fluid rounded-3 border shadow-sm clickable-img mb-2" style="max-height: 180px;" onclick="viewFullImage(this.src)">
+            <img id="m_draw_image" src="" class="img-fluid rounded-3 border shadow-sm clickable-img d-none" style="max-height: 180px;" onclick="viewFullImage(this.src)">
           </div>
         </div>
         <div class="modal-footer border-top-0 px-4 pb-4">
@@ -217,7 +240,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content bg-transparent border-0">
         <div class="modal-body text-center position-relative p-0">
-          <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-2 bg-dark shadow" data-bs-dismiss="modal"></button>
+          <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-2 bg-dark shadow rounded-circle p-2" data-bs-dismiss="modal"></button>
           <img id="fullImageSrc" src="" class="img-fluid rounded-3 shadow-lg" style="max-height: 90vh;">
         </div>
       </div>
@@ -229,6 +252,7 @@
     // 🔴🔴🔴 นำ URL จาก Apps Script มาวางตรงนี้ 🔴🔴🔴
     const API_URL = "https://script.google.com/macros/s/AKfycbwBFTLE8Q_7T63l6dzkZuqqmsRnQvQRby0H6tcICOH9Ld2onRTJ00bYQ9jDGTJaC9bdDg/exec";
 
+    // ข้อมูลสาขา
     const rawBranches = [
       "5285 แฟลตทหารเรือบางนา", "4697 พระราม 9 ซอย 49", "0877 ลาดพร้าว 102", "5291 บ้านเทพารักษ์", 
       "4278 ลาดพร้าว 132", "3118 ซอยเทพารักษ์ 8", "5298 ฟู้ด สต็อก พัฒนาการ 32", "5219 เฉลิมพระเกียรติ 30 แยก 14", 
@@ -237,9 +261,17 @@
       "3106 ท็อปส์ เดลี่ เดอะพาร์คแลนด์", "3119 รามคำแหง 29.2", "2288 รามคำแหง 8 แยก 4"
     ];
 
+    // ข้อมูลแผนกมาตรฐาน (จะนำไปรวมกับแผนกในฐานข้อมูล)
+    const standardDepartments = [
+      "IT (ไอที)", "HR (บุคคล)", "Accounting (บัญชี)", "Finance (การเงิน)", "Marketing (การตลาด)", 
+      "Operations (ปฏิบัติการ)", "Purchasing (จัดซื้อ)", "Maintenance (ซ่อมบำรุง)", "Construction (ก่อสร้าง)", 
+      "Legal (กฎหมาย)", "Logistics (ขนส่ง/คลัง)", "Customer Service (บริการลูกค้า)", "QA/QC (ตรวจสอบคุณภาพ)"
+    ];
+
     let allTasksData = [];
     let currentStatusFilter = 'หน้าแรก';
-    let isCanvasDrawn = false; // ตัวแปรเช็คว่ามีการวาดบนกระดานหรือไม่
+    let currentDrawBase64 = ""; // ตัวแปรเก็บภาพที่วาด
+    let isCanvasDrawn = false;
 
     document.addEventListener('DOMContentLoaded', () => {
       rawBranches.sort();
@@ -250,7 +282,7 @@
         let opt2 = document.createElement('option'); opt2.value = b; opt2.innerHTML = b; dashboardBranchSelect.appendChild(opt2);
       });
       loadTasks();
-      initCanvas(); // เตรียมกระดานวาดเขียน
+      initCanvas(); 
     });
 
     function autoSelectFormat() {
@@ -267,26 +299,24 @@
       document.getElementById(id).classList.remove('d-none');
       document.getElementById('fabMain').style.display = (id === 'dashboard-sec') ? 'flex' : 'none';
       if(id === 'dashboard-sec') applyFilters();
-      if(id === 'add-task-sec') resizeCanvas();
     }
 
-    // อัปเดต Suggestion แผนกอัตโนมัติ
     function updateDepartmentSuggestion() {
-      const depts = [...new Set(allTasksData.map(t => t.department).filter(d => d.trim() !== ''))];
-      const datalist = document.getElementById('deptOptions');
-      datalist.innerHTML = depts.map(d => `<option value="${d}">`).join('');
+      const dbDepts = allTasksData.map(t => t.department).filter(d => d.trim() !== '');
+      const allDepts = [...new Set([...standardDepartments, ...dbDepts])];
+      allDepts.sort();
+      document.getElementById('deptOptions').innerHTML = allDepts.map(d => `<option value="${d}">`).join('');
     }
 
     function loadTasks() {
       const list = document.getElementById('task-list');
       list.innerHTML = `<div class="text-center text-muted mt-5"><div class="spinner-border text-danger mb-2"></div><p>กำลังเชื่อมต่อฐานข้อมูล...</p></div>`;
-      
       fetch(API_URL)
         .then(res => res.json())
         .then(tasks => {
           if (tasks.error) return;
           allTasksData = tasks;
-          updateDepartmentSuggestion(); // ดึงข้อมูลแผนกไปทำ Suggestion
+          updateDepartmentSuggestion(); 
           applyFilters(); 
         })
         .catch(err => { list.innerHTML = `<div class="alert alert-danger shadow-sm border-0"><i class="fa-solid fa-triangle-exclamation"></i> ไม่สามารถเชื่อมต่อฐานข้อมูลได้</div>`; });
@@ -318,7 +348,6 @@
       let html = '';
       tasks.forEach(task => {
         let borderClass = task.priority === 'สูง' ? 'priority-high' : (task.priority === 'ปานกลาง' ? 'priority-medium' : 'priority-low');
-        
         let statusBadge = task.status.includes('ใหม่') ? '<span class="status-badge bg-info text-dark shadow-sm"><i class="fa-solid fa-asterisk fa-spin"></i> งานใหม่</span>' :
                           task.status === 'เสร็จสิ้น' ? '<span class="status-badge bg-success text-white shadow-sm"><i class="fa-solid fa-check"></i> เสร็จสิ้น</span>' :
                           '<span class="status-badge bg-warning text-dark shadow-sm"><i class="fa-solid fa-spinner fa-spin-pulse"></i> ดำเนินการ</span>';
@@ -352,7 +381,6 @@
       list.innerHTML = html;
     }
 
-    // เปิด Modal ดู/แก้ไขงาน
     const taskModal = new bootstrap.Modal(document.getElementById('taskModal'));
     function openTaskModal(task) {
       document.getElementById('m_row').value = task.row;
@@ -371,11 +399,9 @@
       if (task.drawUrl) { drawElement.src = task.drawUrl; drawElement.classList.remove('d-none'); showContainer = true; } else { drawElement.classList.add('d-none'); }
       
       if(showContainer) imgContainer.classList.remove('d-none'); else imgContainer.classList.add('d-none');
-      
       taskModal.show();
     }
 
-    // ฟังก์ชันดูรูปเต็ม
     const imageViewerModal = new bootstrap.Modal(document.getElementById('imageViewerModal'));
     function viewFullImage(src) {
       document.getElementById('fullImageSrc').src = src;
@@ -394,36 +420,54 @@
       .finally(() => { btn.innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i>บันทึกการปรับปรุง'; btn.disabled = false; });
     }
 
-    /* --- ระบบกระดานวาดเขียน Note (Canvas) --- */
+    /* --- ระบบกระดานวาดเขียน (Modal เต็มจอ) --- */
+    const drawModalEl = document.getElementById('drawModal');
+    const drawModal = new bootstrap.Modal(drawModalEl);
     const canvas = document.getElementById('drawingCanvas');
     const ctx = canvas.getContext('2d');
     let isDrawing = false;
 
+    function openDrawModal() {
+      drawModal.show();
+    }
+
+    // เมื่อ Modal เปิดขึ้นมาเต็มจอ ให้คำนวณขนาดกระดานใหม่
+    drawModalEl.addEventListener('shown.bs.modal', function () {
+      resizeCanvas();
+    });
+
     function initCanvas() {
-      ctx.lineWidth = 3;
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = '#000000';
-      
-      // Events สำหรับเมาส์
       canvas.addEventListener('mousedown', startPosition);
       canvas.addEventListener('mouseup', endPosition);
       canvas.addEventListener('mousemove', draw);
-      // Events สำหรับทัชสกรีน (มือถือ)
       canvas.addEventListener('touchstart', startPositionTouch, {passive: false});
       canvas.addEventListener('touchend', endPosition);
       canvas.addEventListener('touchmove', drawTouch, {passive: false});
     }
 
     function resizeCanvas() {
-      canvas.width = canvas.parentElement.offsetWidth;
-      canvas.height = 200;
-      clearCanvas(); // เคลียร์ทุกครั้งที่เปิดหน้าต่างใหม่
+      const container = document.getElementById('canvasContainer');
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#d32f2f'; // หมึกสีแดง
+      
+      // ถ้าย้อนกลับมาเปิดกระดาน ให้วาดรูปเดิมลงไป
+      if(currentDrawBase64) {
+        let img = new Image();
+        img.onload = function() { ctx.drawImage(img, 0, 0); }
+        img.src = currentDrawBase64;
+      } else {
+        clearCanvas();
+      }
     }
 
     function clearCanvas() {
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       isCanvasDrawn = false;
+      currentDrawBase64 = "";
     }
 
     function getMousePos(evt) { const rect = canvas.getBoundingClientRect(); return { x: evt.clientX - rect.left, y: evt.clientY - rect.top }; }
@@ -447,7 +491,24 @@
       ctx.lineTo(pos.x, pos.y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(pos.x, pos.y);
     }
 
-    /* --- การบันทึกงาน --- */
+    function saveDrawing() {
+      if(isCanvasDrawn) {
+        currentDrawBase64 = canvas.toDataURL('image/png');
+        document.getElementById('drawPreview').src = currentDrawBase64;
+        document.getElementById('drawPreviewContainer').classList.remove('d-none');
+      } else {
+        removeDrawing();
+      }
+      drawModal.hide();
+    }
+
+    function removeDrawing() {
+      currentDrawBase64 = "";
+      isCanvasDrawn = false;
+      document.getElementById('drawPreviewContainer').classList.add('d-none');
+      clearCanvas();
+    }
+
     function compressImage(file, callback) {
       const reader = new FileReader(); reader.readAsDataURL(file);
       reader.onload = e => {
@@ -471,13 +532,8 @@
         format: document.getElementById('f_format').value, deadline: document.getElementById('f_deadline').value,
         priority: document.getElementById('f_priority').value, department: document.getElementById('f_department').value,
         details: document.getElementById('f_details').value, 
-        imageBase64: "", drawBase64: ""
+        imageBase64: "", drawBase64: currentDrawBase64 // ส่งรูป Note (ถ้ามี)
       };
-
-      // ถ้าระบบตรวจพบว่ามีการวาดเส้น ให้ดึงข้อมูลภาพจาก Canvas
-      if (isCanvasDrawn) {
-        data.drawBase64 = canvas.toDataURL('image/png');
-      }
 
       const fileInput = document.getElementById('f_image');
       if (fileInput.files.length > 0) { 
@@ -492,7 +548,7 @@
       .then(res => res.json())
       .then(result => {
         if(result.status === 'success') {
-          document.getElementById('taskForm').reset(); clearCanvas();
+          document.getElementById('taskForm').reset(); removeDrawing();
           loadTasks(); showSection('dashboard-sec');
         } else { alert("พบข้อผิดพลาด: " + result.message); }
       }).finally(() => { btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up me-2"></i>บันทึกข้อมูล'; btn.disabled = false; });
