@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Tops Task Management</title>
+  <title>Tops daily task</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Tops Task">
+  <meta name="apple-mobile-web-app-title" content="Tops daily task">
   <link rel="apple-touch-icon" href="icon.png"> 
   <link rel="icon" type="image/png" href="icon.png">
 
@@ -18,7 +18,6 @@
     body { background-color: #f4f7f6; font-family: 'Segoe UI', Roboto, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
     .navbar { background: linear-gradient(90deg, #d32f2f 0%, #e53935 100%); color: white; padding-top: env(safe-area-inset-top); }
     
-    /* UI การ์ดงานแบบใหม่ โฟกัสงานด่วน */
     .task-card { border-radius: 14px; border: none; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
     .task-card:active { transform: scale(0.97); }
     .urgent-card { border-left: 6px solid #dc3545; background: linear-gradient(to right, #fffcfc, #ffffff); box-shadow: 0 4px 10px rgba(220,53,69,0.1); }
@@ -39,7 +38,7 @@
     #canvasContainer { overflow: hidden; background-color: #fff; background-image: radial-gradient(#d3d3d3 1px, transparent 1px); background-size: 20px 20px; }
     #drawingCanvas { display: block; touch-action: none; cursor: crosshair; }
     
-    /* 🔴 ปรับแต่งปฏิทินสำหรับมือถือ ให้ดูมินิมอลและจัดกลุ่มได้สวยงาม */
+    /* สไตล์ปฏิทิน */
     .fc-toolbar-title { font-size: 1.1rem !important; color: #d32f2f; font-weight: bold; }
     .fc-button { padding: 0.3rem 0.5rem !important; font-size: 0.85rem !important; }
     .fc-button-primary { background-color: #d32f2f !important; border-color: #d32f2f !important; }
@@ -56,7 +55,9 @@
         <button class="btn btn-link text-white p-0 me-3 border-0" type="button" onclick="openSidebarMenu()">
           <i class="fa-solid fa-bars fs-4"></i>
         </button>
-        <span class="navbar-brand mb-0 h5 fw-bold">Tops Task</span>
+        <span class="navbar-brand mb-0 h5 fw-bold" style="cursor: pointer;" onclick="showSection('dashboard-sec'); setFilterStatus('หน้าแรก');">
+          Tops daily task
+        </span>
       </div>
     </div>
   </nav>
@@ -265,7 +266,7 @@
 
     let allTasksData = [];
     let currentStatusFilter = 'หน้าแรก';
-    let selectedDateFilter = null; // ตัวแปรสำหรับกดดูงานจากปฏิทิน
+    let selectedDateFilter = null; 
     let currentDrawBase64 = ""; 
     let isCanvasDrawn = false;
     let calendar; 
@@ -310,18 +311,22 @@
       }
     }
 
-    /* --- 🔴 ระบบปฏิทินแบบ Group งานซ้ำวันกัน --- */
+    /* --- 🔴 ระบบปฏิทินที่สลับมุมมอง List ได้ --- */
     function initCalendar() {
       const calendarEl = document.getElementById('calendar');
       calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth', 
+        initialView: window.innerWidth < 768 ? 'listMonth' : 'dayGridMonth', // มือถือเริ่มต้นเป็น List, คอมเป็นตาราง
         locale: 'th',
-        headerToolbar: { left: 'prev,next', center: 'title', right: 'today' },
+        headerToolbar: { 
+          left: 'prev,next', 
+          center: 'title', 
+          // 🔴 ปุ่มสำหรับสลับมุมมอง (ตารางรายเดือน, ตารางรายสัปดาห์, และแบบรายการ)
+          right: window.innerWidth < 768 ? 'dayGridMonth,listMonth' : 'dayGridMonth,timeGridWeek,listMonth' 
+        },
         height: 'auto',
         contentHeight: 'auto',
         events: [],
         
-        // 🔴 เมื่อกดที่เหตุการณ์ (แท็บสี) บนปฏิทิน ให้พากลับไปหน้าแรกแล้วโชว์เฉพาะงานวันนั้น
         eventClick: function(info) { 
           selectedDateFilter = info.event.extendedProps.dateStr;
           showSection('dashboard-sec');
@@ -329,7 +334,6 @@
           window.scrollTo(0, 0);
         },
         
-        // 🔴 เมื่อกดที่ช่องว่างของวัน ให้เปิดฟอร์มสร้างงานใหม่พร้อมใส่วันที่รอเลย
         dateClick: function(info) {
           showSection('add-task-sec');
           document.getElementById('f_deadline').value = info.dateStr; 
@@ -343,11 +347,9 @@
       if (!calendar) return;
       calendar.removeAllEvents();
       
-      // ดึงงานที่ยังไม่เสร็จหรือถูกลบ
       let activeTasks = allTasksData.filter(t => t.status !== 'ถูกลบ' && t.status !== 'เสร็จสิ้น');
       let tasksByDate = {};
 
-      // จัดกลุ่มงานตามวันที่
       activeTasks.forEach(t => {
         let d = new Date(t.deadline);
         let dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -356,17 +358,15 @@
       });
 
       let events = [];
-      // สร้างแท็บปฏิทิน 1 แท็บต่อ 1 วัน
       for (let dateStr in tasksByDate) {
         let dailyTasks = tasksByDate[dateStr];
-        let firstBranchCode = dailyTasks[0].branch.split(' ')[0]; // เอารหัสสาขางานแรก
+        let firstBranchCode = dailyTasks[0].branch.split(' ')[0]; 
         
         let title = firstBranchCode;
         if (dailyTasks.length > 1) {
-          title += ` (+${dailyTasks.length - 1})`; // ถ้างามมีมากกว่า 1 ให้แสดง (+จำนวน)
+          title += ` (+${dailyTasks.length - 1})`;
         }
 
-        // เช็คความสำคัญเพื่อใส่สี (เอาสีงานที่ด่วนที่สุดของวันนั้นเป็นหลัก)
         let hasHigh = dailyTasks.some(t => t.priority === 'สูง');
         let hasMed = dailyTasks.some(t => t.priority === 'ปานกลาง');
         let evtColor = hasHigh ? '#dc3545' : (hasMed ? '#ffc107' : '#0d6efd');
@@ -419,11 +419,9 @@
       let filtered = allTasksData;
       if (branchVal !== '') filtered = filtered.filter(t => t.branch === branchVal);
       
-      // กรองสถานะ
       if (currentStatusFilter === 'หน้าแรก') {
         filtered = filtered.filter(t => t.status !== 'เสร็จสิ้น' && t.status !== 'ถูกลบ').slice(0, 10); 
       } else if (currentStatusFilter === 'ตามวันที่') {
-        // ดึงเฉพาะงานของวันที่เลือกมาจากปฏิทิน
         filtered = filtered.filter(t => {
           if (t.status === 'ถูกลบ' || t.status === 'เสร็จสิ้น') return false;
           let d = new Date(t.deadline);
@@ -494,7 +492,6 @@
         if (urgentHtml) html += `<div class="col-12 mt-1 mb-1"><h6 class="fw-bold text-danger small"><i class="fa-solid fa-bolt me-1"></i> ต้องรีบจัดการ</h6></div>` + urgentHtml;
         if (normalHtml) html += `<div class="col-12 mt-3 mb-1"><h6 class="fw-bold text-secondary small"><i class="fa-regular fa-calendar-check me-1"></i> งานที่กำลังมาถึง</h6></div>` + normalHtml;
       } else {
-        // กรองแบบปกติ หรือแบบ "ตามวันที่กดจากปฏิทิน" ให้แสดงแบบการ์ดปกติ
         tasks.forEach(task => html += buildCardHtml(task, false));
       }
       list.innerHTML = html;
