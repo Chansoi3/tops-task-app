@@ -48,7 +48,7 @@
   <nav class="navbar navbar-dark mb-4 p-3 shadow-sm sticky-top">
     <div class="container-fluid d-flex align-items-center">
       <div>
-        <button class="btn btn-link text-white p-0 me-3 border-0" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
+        <button class="btn btn-link text-white p-0 me-3 border-0" type="button" onclick="openSidebarMenu()">
           <i class="fa-solid fa-bars fs-4"></i>
         </button>
         <span class="navbar-brand mb-0 h5 fw-bold">Tops Task</span>
@@ -63,28 +63,28 @@
   <div class="offcanvas offcanvas-start border-0 shadow" tabindex="-1" id="sidebarMenu">
     <div class="offcanvas-header bg-light border-bottom">
       <h6 class="offcanvas-title fw-bold text-dark"><i class="fa-solid fa-layer-group me-2 text-danger"></i>เมนูหลัก</h6>
-      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+      <button type="button" class="btn-close" onclick="closeSidebarMenu()"></button>
     </div>
     <div class="offcanvas-body p-0 d-flex flex-column h-100">
       <div class="list-group list-group-flush mt-2 flex-grow-1">
-        <button class="list-group-item list-group-item-action py-3 fw-bold text-primary border-0" onclick="showSection('calendar-sec')" data-bs-dismiss="offcanvas">
+        <button class="list-group-item list-group-item-action py-3 fw-bold text-primary border-0" onclick="showSection('calendar-sec'); closeSidebarMenu()">
           <i class="fa-solid fa-calendar-days me-3 w-20px text-center"></i> ปฏิทินงาน
         </button>
-        <button class="list-group-item list-group-item-action py-3 fw-bold text-danger border-0" onclick="showSection('dashboard-sec'); setFilterStatus('หน้าแรก')" data-bs-dismiss="offcanvas">
+        <button class="list-group-item list-group-item-action py-3 fw-bold text-danger border-0" onclick="showSection('dashboard-sec'); setFilterStatus('หน้าแรก'); closeSidebarMenu()">
           <i class="fa-solid fa-fire fa-beat-fade me-3 w-20px text-center"></i> งานเร่งด่วน
         </button>
-        <button class="list-group-item list-group-item-action py-3 border-0 text-dark" onclick="showSection('dashboard-sec'); setFilterStatus('งานใหม่')" data-bs-dismiss="offcanvas">
+        <button class="list-group-item list-group-item-action py-3 border-0 text-dark" onclick="showSection('dashboard-sec'); setFilterStatus('งานใหม่'); closeSidebarMenu()">
           <i class="fa-solid fa-asterisk fa-spin me-3 w-20px text-center text-info"></i> งานใหม่
         </button>
-        <button class="list-group-item list-group-item-action py-3 border-0 text-dark" onclick="showSection('dashboard-sec'); setFilterStatus('กำลังดำเนินงาน')" data-bs-dismiss="offcanvas">
+        <button class="list-group-item list-group-item-action py-3 border-0 text-dark" onclick="showSection('dashboard-sec'); setFilterStatus('กำลังดำเนินงาน'); closeSidebarMenu()">
           <i class="fa-solid fa-spinner fa-spin-pulse me-3 w-20px text-center text-warning"></i> กำลังดำเนินงาน
         </button>
-        <button class="list-group-item list-group-item-action py-3 border-0 text-dark" onclick="showSection('dashboard-sec'); setFilterStatus('เสร็จสิ้น')" data-bs-dismiss="offcanvas">
+        <button class="list-group-item list-group-item-action py-3 border-0 text-dark" onclick="showSection('dashboard-sec'); setFilterStatus('เสร็จสิ้น'); closeSidebarMenu()">
           <i class="fa-solid fa-circle-check me-3 w-20px text-center text-success"></i> เสร็จสิ้น
         </button>
       </div>
       <div class="list-group list-group-flush border-top">
-        <button class="list-group-item list-group-item-action py-3 border-0 text-secondary fw-bold" onclick="showSection('dashboard-sec'); setFilterStatus('ถูกลบ')" data-bs-dismiss="offcanvas">
+        <button class="list-group-item list-group-item-action py-3 border-0 text-secondary fw-bold" onclick="showSection('dashboard-sec'); setFilterStatus('ถูกลบ'); closeSidebarMenu()">
           <i class="fa-solid fa-trash-can me-3 w-20px text-center"></i> ถังขยะ (งานที่ถูกลบ)
         </button>
       </div>
@@ -284,8 +284,9 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // 🔴🔴🔴 วาง URL จาก Apps Script ตรงนี้ 🔴🔴🔴
+    // 🔴🔴🔴 นำ URL จาก Apps Script มาวางตรงนี้ 🔴🔴🔴
     const API_URL = "https://script.google.com/macros/s/AKfycbwBFTLE8Q_7T63l6dzkZuqqmsRnQvQRby0H6tcICOH9Ld2onRTJ00bYQ9jDGTJaC9bdDg/exec";
 
     const rawBranches = [
@@ -302,9 +303,15 @@
     let currentStatusFilter = 'หน้าแรก';
     let currentDrawBase64 = ""; 
     let isCanvasDrawn = false;
-    let calendar; // 🔴 ตัวแปรปฏิทิน
+    let calendar; 
+    
+    // 🔴 ตัวแปรสำหรับควบคุมแถบด้านข้าง
+    let bsOffcanvas;
 
     document.addEventListener('DOMContentLoaded', () => {
+      // 🔴 เริ่มต้นระบบเปิด/ปิด แถบด้านข้าง
+      bsOffcanvas = new bootstrap.Offcanvas(document.getElementById('sidebarMenu'));
+
       rawBranches.sort();
       const branchSelect = document.getElementById('f_branch');
       const dashboardBranchSelect = document.getElementById('branchFilter');
@@ -315,6 +322,14 @@
       loadTasks();
       initCanvas(); 
     });
+
+    // 🔴 ฟังก์ชันเปิด-ปิด Sidebar
+    function openSidebarMenu() {
+      bsOffcanvas.show();
+    }
+    function closeSidebarMenu() {
+      bsOffcanvas.hide();
+    }
 
     function autoSelectFormat() {
       const branchStr = document.getElementById('f_branch').value;
@@ -327,7 +342,7 @@
     function showSection(id) {
       document.getElementById('dashboard-sec').classList.add('d-none');
       document.getElementById('add-task-sec').classList.add('d-none');
-      document.getElementById('calendar-sec').classList.add('d-none'); // ซ่อนปฏิทิน
+      document.getElementById('calendar-sec').classList.add('d-none'); 
       document.getElementById(id).classList.remove('d-none');
       
       document.getElementById('fabMain').style.display = (id === 'add-task-sec') ? 'none' : 'flex';
@@ -342,7 +357,6 @@
       }
     }
 
-    /* --- 🔴 ระบบปฏิทิน (FullCalendar) --- */
     function initCalendar() {
       const calendarEl = document.getElementById('calendar');
       calendar = new FullCalendar.Calendar(calendarEl, {
@@ -361,12 +375,10 @@
     function updateCalendarEvents() {
       if (!calendar) return;
       calendar.removeAllEvents();
-      // ดึงงานทั้งหมดที่ไม่ถูกลบมาใส่ปฏิทิน
       let events = allTasksData.filter(t => t.status !== 'ถูกลบ').map(t => {
         let evtColor = t.priority === 'สูง' ? '#dc3545' : (t.priority === 'ปานกลาง' ? '#ffc107' : '#28a745');
-        if (t.status === 'เสร็จสิ้น') evtColor = '#6c757d'; // งานเสร็จแล้วเป็นสีเทา
+        if (t.status === 'เสร็จสิ้น') evtColor = '#6c757d'; 
 
-        // รวมวันที่และเวลาเข้าด้วยกัน (ถ้ามีเวลา)
         let d = new Date(t.deadline);
         let dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
         let startDateTime = t.time ? `${dateStr}T${t.time}` : dateStr;
@@ -442,7 +454,6 @@
                             task.priority === 'ปานกลาง' ? '<span class="badge bg-warning text-dark px-2 py-1 shadow-sm">ปานกลาง</span>' :
                             '<span class="badge bg-success px-2 py-1 shadow-sm">ต่ำ</span>';
 
-        // 🔴 รวมวันที่และเวลามาแสดงผลในการ์ด
         let deadlineStr = new Date(task.deadline).toLocaleDateString('th-TH');
         let timeDisplayTxt = task.time ? ` เวลา ${task.time} น.` : '';
         let fullDateTimeStr = `${deadlineStr}${timeDisplayTxt}`;
@@ -486,7 +497,7 @@
       document.getElementById('m_title_edit').value = task.title;
       document.getElementById('m_details_edit').value = task.details;
       document.getElementById('m_status_edit').value = task.status;
-      document.getElementById('m_time_edit').value = task.time; // 🔴 ดึงเวลาเดิมมาแสดงให้แก้
+      document.getElementById('m_time_edit').value = task.time; 
       
       const imgContainer = document.getElementById('m_image_container');
       const imgElement = document.getElementById('m_image');
@@ -511,7 +522,7 @@
         title: document.getElementById('m_title_edit').value,
         status: document.getElementById('m_status_edit').value, 
         details: document.getElementById('m_details_edit').value,
-        time: document.getElementById('m_time_edit').value // 🔴 ส่งเวลาที่แก้ไปบันทึก
+        time: document.getElementById('m_time_edit').value 
       };
       fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateTask', taskData: updatedData }) })
       .then(() => { taskModal.hide(); loadTasks(); })
@@ -585,7 +596,7 @@
         format: document.getElementById('f_format').value, deadline: document.getElementById('f_deadline').value,
         priority: document.getElementById('f_priority').value, department: document.getElementById('f_department').value,
         details: document.getElementById('f_details').value, 
-        time: document.getElementById('f_time').value, // 🔴 รับค่าเวลาไปด้วย
+        time: document.getElementById('f_time').value,
         imageBase64: "", drawBase64: currentDrawBase64
       };
 
