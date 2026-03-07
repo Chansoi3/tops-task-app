@@ -42,9 +42,10 @@
     .fc-toolbar-title { font-size: 1.1rem !important; color: #d32f2f; font-weight: bold; }
     .fc-button { padding: 0.3rem 0.5rem !important; font-size: 0.85rem !important; }
     .fc-button-primary { background-color: #d32f2f !important; border-color: #d32f2f !important; }
-    .fc-event { cursor: pointer; font-size: 0.75rem; border: none; padding: 3px; border-radius: 4px; text-align: center; font-weight: bold; letter-spacing: 0.2px; }
+    .fc-event { cursor: pointer; font-size: 0.8rem; border: none; padding: 3px; border-radius: 4px; font-weight: bold; letter-spacing: 0.2px; }
     .fc-daygrid-day-frame { cursor: pointer; transition: 0.2s; min-height: 60px !important; }
     .fc-daygrid-day-frame:active { background-color: #f8d7da; }
+    .fc-list-event-title { font-size: 0.9rem; } /* ขนาดฟอนต์สำหรับ List view */
   </style>
 </head>
 <body>
@@ -270,6 +271,7 @@
     let currentDrawBase64 = ""; 
     let isCanvasDrawn = false;
     let calendar; 
+    let currentCalView = window.innerWidth < 768 ? 'listMonth' : 'dayGridMonth'; // กำหนดค่าเริ่มต้นตามขนาดจอ
     let bsOffcanvas;
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -306,32 +308,47 @@
       if(id === 'calendar-sec') {
         setTimeout(() => {
           if(!calendar) initCalendar();
-          calendar.render(); updateCalendarEvents();
+          calendar.render(); 
+          updateCalendarEvents();
         }, 100);
       }
     }
 
-    /* --- 🔴 ระบบปฏิทินที่สลับมุมมอง List ได้ --- */
+    /* --- 🔴 ระบบปฏิทินที่แยกความฉลาดแบบ Grid และ List --- */
     function initCalendar() {
       const calendarEl = document.getElementById('calendar');
       calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: window.innerWidth < 768 ? 'listMonth' : 'dayGridMonth', // มือถือเริ่มต้นเป็น List, คอมเป็นตาราง
+        initialView: currentCalView,
         locale: 'th',
         headerToolbar: { 
           left: 'prev,next', 
           center: 'title', 
-          // 🔴 ปุ่มสำหรับสลับมุมมอง (ตารางรายเดือน, ตารางรายสัปดาห์, และแบบรายการ)
           right: window.innerWidth < 768 ? 'dayGridMonth,listMonth' : 'dayGridMonth,timeGridWeek,listMonth' 
         },
         height: 'auto',
         contentHeight: 'auto',
         events: [],
         
+        // 🔴 ฟังก์ชันจับการเปลี่ยนมุมมอง เพื่อให้ระบบวาดข้อมูลใหม่
+        datesSet: function(info) {
+          if (currentCalView !== info.view.type) {
+            currentCalView = info.view.type;
+            updateCalendarEvents();
+          }
+        },
+        
+        // 🔴 ฟังก์ชันกดดูข้อมูล
         eventClick: function(info) { 
-          selectedDateFilter = info.event.extendedProps.dateStr;
-          showSection('dashboard-sec');
-          setFilterStatus('ตามวันที่');
-          window.scrollTo(0, 0);
+          if (info.event.extendedProps.isGroup) {
+            // ถ้าอยู่แบบตาราง (ยุบรวม) -> กดแล้วพาไปหน้า Dashboard โชว์เฉพาะวันนั้น
+            selectedDateFilter = info.event.extendedProps.dateStr;
+            showSection('dashboard-sec');
+            setFilterStatus('ตามวันที่');
+            window.scrollTo(0, 0);
+          } else {
+            // ถ้าอยู่แบบ List -> กดแล้วเด้งหน้าต่างรายละเอียดงานทันที
+            openTaskModal(info.event.extendedProps.task);
+          }
         },
         
         dateClick: function(info) {
@@ -348,36 +365,55 @@
       calendar.removeAllEvents();
       
       let activeTasks = allTasksData.filter(t => t.status !== 'ถูกลบ' && t.status !== 'เสร็จสิ้น');
-      let tasksByDate = {};
-
-      activeTasks.forEach(t => {
-        let d = new Date(t.deadline);
-        let dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-        if(!tasksByDate[dateStr]) tasksByDate[dateStr] = [];
-        tasksByDate[dateStr].push(t);
-      });
-
       let events = [];
-      for (let dateStr in tasksByDate) {
-        let dailyTasks = tasksByDate[dateStr];
-        let firstBranchCode = dailyTasks[0].branch.split(' ')[0]; 
-        
-        let title = firstBranchCode;
-        if (dailyTasks.length > 1) {
-          title += ` (+${dailyTasks.length - 1})`;
+
+      // 🔴 เงื่อนไขความฉลาด: ถ้าเป็นตารางเดือนให้ยุบรวม / ถ้าเป็นแบบอื่น(List/Week)ให้กางเต็ม
+      if (currentCalView === 'dayGridMonth') {
+        let tasksByDate = {};
+        activeTasks.forEach(t => {
+          let d = new Date(t.deadline);
+          let dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+          if(!tasksByDate[dateStr]) tasksByDate[dateStr] = [];
+          tasksByDate[dateStr].push(t);
+        });
+
+        for (let dateStr in tasksByDate) {
+          let dailyTasks = tasksByDate[dateStr];
+          let firstBranchCode = dailyTasks[0].branch.split(' ')[0]; 
+          
+          let title = firstBranchCode;
+          if (dailyTasks.length > 1) {
+            title += ` (+${dailyTasks.length - 1})`;
+          }
+
+          let hasHigh = dailyTasks.some(t => t.priority === 'สูง');
+          let hasMed = dailyTasks.some(t => t.priority === 'ปานกลาง');
+          let evtColor = hasHigh ? '#dc3545' : (hasMed ? '#ffc107' : '#0d6efd');
+
+          events.push({
+            title: title,
+            start: dateStr, // ใช้แค่วันที่ เพื่อให้เต็มช่อง
+            color: evtColor,
+            extendedProps: { isGroup: true, dateStr: dateStr }
+          });
         }
-
-        let hasHigh = dailyTasks.some(t => t.priority === 'สูง');
-        let hasMed = dailyTasks.some(t => t.priority === 'ปานกลาง');
-        let evtColor = hasHigh ? '#dc3545' : (hasMed ? '#ffc107' : '#0d6efd');
-
-        events.push({
-          title: title,
-          start: dateStr,
-          color: evtColor,
-          extendedProps: { dateStr: dateStr }
+      } else {
+        // 🔴 แบบรายการ (List View) กางข้อมูลออกมาเต็มรูปแบบ
+        activeTasks.forEach(t => {
+          let evtColor = t.priority === 'สูง' ? '#dc3545' : (t.priority === 'ปานกลาง' ? '#ffc107' : '#0d6efd');
+          let d = new Date(t.deadline);
+          let dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+          
+          // ใส่รหัสสาขา, ชื่อหัวข้อ และแผนก ให้ครบถ้วน
+          events.push({
+            title: `[รหัส: ${t.branch.split(' ')[0]}] ${t.title} - (แผนก: ${t.department})`,
+            start: t.time ? `${dateStr}T${t.time}` : dateStr,
+            color: evtColor,
+            extendedProps: { task: t, isGroup: false, dateStr: dateStr }
+          });
         });
       }
+
       calendar.addEventSource(events);
     }
 
