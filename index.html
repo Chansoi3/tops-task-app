@@ -12,6 +12,7 @@
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
   
   <style>
     body { background-color: #f8f9fa; font-family: 'Segoe UI', Roboto, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -35,6 +36,11 @@
     .clickable-img:active { transform: scale(0.95); opacity: 0.8; }
     #canvasContainer { overflow: hidden; background-color: #fff; background-image: radial-gradient(#d3d3d3 1px, transparent 1px); background-size: 20px 20px; }
     #drawingCanvas { display: block; touch-action: none; cursor: crosshair; }
+    
+    /* สไตล์ปรับแต่งให้ปฏิทินสวยงาม */
+    .fc-toolbar-title { font-size: 1.2rem !important; color: #d32f2f; font-weight: bold; }
+    .fc-button-primary { background-color: #d32f2f !important; border-color: #d32f2f !important; }
+    .fc-event { cursor: pointer; font-size: 0.85rem; border-radius: 4px; border: none; padding: 2px 4px; margin-bottom: 2px;}
   </style>
 </head>
 <body>
@@ -61,13 +67,24 @@
     </div>
     <div class="offcanvas-body p-0 d-flex flex-column h-100">
       <div class="list-group list-group-flush mt-2 flex-grow-1">
-        <button class="list-group-item list-group-item-action py-3 fw-bold text-danger border-0" onclick="setFilterStatus('หน้าแรก')" data-bs-dismiss="offcanvas"><i class="fa-solid fa-fire fa-beat-fade me-3 w-20px text-center"></i> งานเร่งด่วน</button>
-        <button class="list-group-item list-group-item-action py-3 border-0 text-dark" onclick="setFilterStatus('งานใหม่')" data-bs-dismiss="offcanvas"><i class="fa-solid fa-asterisk fa-spin me-3 w-20px text-center text-info"></i> งานใหม่</button>
-        <button class="list-group-item list-group-item-action py-3 border-0 text-dark" onclick="setFilterStatus('กำลังดำเนินงาน')" data-bs-dismiss="offcanvas"><i class="fa-solid fa-spinner fa-spin-pulse me-3 w-20px text-center text-warning"></i> กำลังดำเนินงาน</button>
-        <button class="list-group-item list-group-item-action py-3 border-0 text-dark" onclick="setFilterStatus('เสร็จสิ้น')" data-bs-dismiss="offcanvas"><i class="fa-solid fa-circle-check me-3 w-20px text-center text-success"></i> เสร็จสิ้น</button>
+        <button class="list-group-item list-group-item-action py-3 fw-bold text-primary border-0" onclick="showSection('calendar-sec')" data-bs-dismiss="offcanvas">
+          <i class="fa-solid fa-calendar-days me-3 w-20px text-center"></i> ปฏิทินงาน
+        </button>
+        <button class="list-group-item list-group-item-action py-3 fw-bold text-danger border-0" onclick="showSection('dashboard-sec'); setFilterStatus('หน้าแรก')" data-bs-dismiss="offcanvas">
+          <i class="fa-solid fa-fire fa-beat-fade me-3 w-20px text-center"></i> งานเร่งด่วน
+        </button>
+        <button class="list-group-item list-group-item-action py-3 border-0 text-dark" onclick="showSection('dashboard-sec'); setFilterStatus('งานใหม่')" data-bs-dismiss="offcanvas">
+          <i class="fa-solid fa-asterisk fa-spin me-3 w-20px text-center text-info"></i> งานใหม่
+        </button>
+        <button class="list-group-item list-group-item-action py-3 border-0 text-dark" onclick="showSection('dashboard-sec'); setFilterStatus('กำลังดำเนินงาน')" data-bs-dismiss="offcanvas">
+          <i class="fa-solid fa-spinner fa-spin-pulse me-3 w-20px text-center text-warning"></i> กำลังดำเนินงาน
+        </button>
+        <button class="list-group-item list-group-item-action py-3 border-0 text-dark" onclick="showSection('dashboard-sec'); setFilterStatus('เสร็จสิ้น')" data-bs-dismiss="offcanvas">
+          <i class="fa-solid fa-circle-check me-3 w-20px text-center text-success"></i> เสร็จสิ้น
+        </button>
       </div>
       <div class="list-group list-group-flush border-top">
-        <button class="list-group-item list-group-item-action py-3 border-0 text-secondary fw-bold" onclick="setFilterStatus('ถูกลบ')" data-bs-dismiss="offcanvas">
+        <button class="list-group-item list-group-item-action py-3 border-0 text-secondary fw-bold" onclick="showSection('dashboard-sec'); setFilterStatus('ถูกลบ')" data-bs-dismiss="offcanvas">
           <i class="fa-solid fa-trash-can me-3 w-20px text-center"></i> ถังขยะ (งานที่ถูกลบ)
         </button>
       </div>
@@ -76,6 +93,15 @@
 
   <div class="container pb-5">
     
+    <div id="calendar-sec" class="d-none">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0 fw-bold text-dark"><i class="fa-solid fa-calendar-days text-primary me-2"></i>ปฏิทินงาน</h5>
+      </div>
+      <div class="card shadow-sm border-0 rounded-4 p-3 bg-white">
+        <div id="calendar"></div>
+      </div>
+    </div>
+
     <div id="dashboard-sec">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="mb-0 fw-bold text-dark" id="dashboard-title"><i class="fa-solid fa-fire fa-beat text-danger me-2"></i>รายการงานเร่งด่วน</h5>
@@ -113,11 +139,15 @@
             <select id="f_format"><option value=""></option><option value="CO">CO</option><option value="FC">FC</option></select>
           </div>
           <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-bold">กำหนดเสร็จสิ้น</label>
+            <div class="col-md-4 mb-3">
+              <label class="form-label fw-bold">กำหนดเสร็จสิ้น (วันที่)</label>
               <input type="date" class="form-control" id="f_deadline" required>
             </div>
-            <div class="col-md-6 mb-3">
+            <div class="col-md-4 mb-3">
+              <label class="form-label fw-bold text-primary"><i class="fa-regular fa-clock"></i> เวลาเสร็จสิ้น/นัดหมาย</label>
+              <input type="time" class="form-control border-primary" id="f_time" required>
+            </div>
+            <div class="col-md-4 mb-3">
               <label class="form-label fw-bold">ระดับความสำคัญ</label>
               <select class="form-select" id="f_priority" required>
                 <option value="สูง">🔴 ระดับสูง (เร่งด่วน)</option>
@@ -192,7 +222,7 @@
               <div class="col-8 fw-bold text-dark"><span id="m_branch"></span></div>
             </div>
             <div class="row">
-              <div class="col-4 text-muted small">กำหนดส่ง:</div>
+              <div class="col-4 text-muted small">กำหนดส่งเดิม:</div>
               <div class="col-8 fw-bold text-secondary"><i class="fa-regular fa-calendar me-1"></i> <span id="m_deadline"></span></div>
             </div>
           </div>
@@ -201,22 +231,30 @@
             <label class="fw-bold text-dark small mb-1">หัวข้อรายการ</label>
             <input type="text" id="m_title_edit" class="form-control bg-white">
           </div>
-          <div class="mb-3">
-            <label class="fw-bold text-dark small mb-1">สถานะปัจจุบัน</label>
-            <select id="m_status_edit" class="form-select bg-white fw-bold border-primary text-primary">
-              <option value="งานใหม่">งานใหม่</option>
-              <option value="เปิดงานใหม่" class="d-none">เปิดงานใหม่</option>
-              <option value="กำลังดำเนินงาน">กำลังดำเนินงาน</option>
-              <option value="เสร็จสิ้น">เสร็จสิ้น</option>
-              <option value="ถูกลบ">ถูกลบ (ย้ายลงถังขยะ)</option>
-            </select>
+          
+          <div class="row mb-3">
+            <div class="col-6">
+              <label class="fw-bold text-dark small mb-1">สถานะปัจจุบัน</label>
+              <select id="m_status_edit" class="form-select bg-white fw-bold border-primary text-primary">
+                <option value="งานใหม่">งานใหม่</option>
+                <option value="เปิดงานใหม่" class="d-none">เปิดงานใหม่</option>
+                <option value="กำลังดำเนินงาน">กำลังดำเนินงาน</option>
+                <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+                <option value="ถูกลบ">ถูกลบ (ถังขยะ)</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="fw-bold text-dark small mb-1">เวลานัดหมาย</label>
+              <input type="time" id="m_time_edit" class="form-control bg-white border-primary">
+            </div>
           </div>
+
           <div class="mb-3">
             <label class="fw-bold text-dark small mb-1">รายละเอียด</label>
-            <textarea id="m_details_edit" class="form-control bg-white" rows="4"></textarea>
+            <textarea id="m_details_edit" class="form-control bg-white" rows="3"></textarea>
           </div>
           
-          <div id="m_image_container" class="mt-3 text-center d-none">
+          <div id="m_image_container" class="mt-2 text-center d-none">
             <label class="fw-bold text-dark small d-block text-start mb-2">ภาพประกอบ / Note (กดรูปเพื่อขยายเต็มจอ)</label>
             <img id="m_image" src="" class="img-fluid rounded-3 border shadow-sm clickable-img mb-2" style="max-height: 180px;" onclick="viewFullImage(this.src)">
             <img id="m_draw_image" src="" class="img-fluid rounded-3 border shadow-sm clickable-img d-none" style="max-height: 180px;" onclick="viewFullImage(this.src)">
@@ -246,9 +284,8 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // 🔴 วาง URL จาก Apps Script ตรงนี้ 🔴
+    // 🔴🔴🔴 วาง URL จาก Apps Script ตรงนี้ 🔴🔴🔴
     const API_URL = "https://script.google.com/macros/s/AKfycbwBFTLE8Q_7T63l6dzkZuqqmsRnQvQRby0H6tcICOH9Ld2onRTJ00bYQ9jDGTJaC9bdDg/exec";
 
     const rawBranches = [
@@ -259,16 +296,13 @@
       "3106 ท็อปส์ เดลี่ เดอะพาร์คแลนด์", "3119 รามคำแหง 29.2", "2288 รามคำแหง 8 แยก 4"
     ];
 
-    const standardDepartments = [
-      "IT (ไอที)", "HR (บุคคล)", "Accounting (บัญชี)", "Finance (การเงิน)", "Marketing (การตลาด)", 
-      "Operations (ปฏิบัติการ)", "Purchasing (จัดซื้อ)", "Maintenance (ซ่อมบำรุง)", "Construction (ก่อสร้าง)", 
-      "Legal (กฎหมาย)", "Logistics (ขนส่ง/คลัง)", "Customer Service (บริการลูกค้า)", "QA/QC (ตรวจสอบคุณภาพ)"
-    ];
+    const standardDepartments = ["IT (ไอที)", "HR (บุคคล)", "Accounting (บัญชี)", "Finance (การเงิน)", "Marketing (การตลาด)", "Operations (ปฏิบัติการ)", "Purchasing (จัดซื้อ)", "Maintenance (ซ่อมบำรุง)", "Construction (ก่อสร้าง)", "Legal (กฎหมาย)", "Logistics (ขนส่ง/คลัง)", "Customer Service (บริการลูกค้า)", "QA/QC (ตรวจสอบคุณภาพ)"];
 
     let allTasksData = [];
     let currentStatusFilter = 'หน้าแรก';
     let currentDrawBase64 = ""; 
     let isCanvasDrawn = false;
+    let calendar; // 🔴 ตัวแปรปฏิทิน
 
     document.addEventListener('DOMContentLoaded', () => {
       rawBranches.sort();
@@ -293,15 +327,63 @@
     function showSection(id) {
       document.getElementById('dashboard-sec').classList.add('d-none');
       document.getElementById('add-task-sec').classList.add('d-none');
+      document.getElementById('calendar-sec').classList.add('d-none'); // ซ่อนปฏิทิน
       document.getElementById(id).classList.remove('d-none');
-      document.getElementById('fabMain').style.display = (id === 'dashboard-sec') ? 'flex' : 'none';
+      
+      document.getElementById('fabMain').style.display = (id === 'add-task-sec') ? 'none' : 'flex';
+      
       if(id === 'dashboard-sec') applyFilters();
+      if(id === 'calendar-sec') {
+        setTimeout(() => {
+          if(!calendar) initCalendar();
+          calendar.render();
+          updateCalendarEvents();
+        }, 100);
+      }
+    }
+
+    /* --- 🔴 ระบบปฏิทิน (FullCalendar) --- */
+    function initCalendar() {
+      const calendarEl = document.getElementById('calendar');
+      calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'th',
+        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' },
+        height: 'auto',
+        events: [],
+        eventClick: function(info) {
+           openTaskModal(info.event.extendedProps.task);
+        }
+      });
+      calendar.render();
+    }
+
+    function updateCalendarEvents() {
+      if (!calendar) return;
+      calendar.removeAllEvents();
+      // ดึงงานทั้งหมดที่ไม่ถูกลบมาใส่ปฏิทิน
+      let events = allTasksData.filter(t => t.status !== 'ถูกลบ').map(t => {
+        let evtColor = t.priority === 'สูง' ? '#dc3545' : (t.priority === 'ปานกลาง' ? '#ffc107' : '#28a745');
+        if (t.status === 'เสร็จสิ้น') evtColor = '#6c757d'; // งานเสร็จแล้วเป็นสีเทา
+
+        // รวมวันที่และเวลาเข้าด้วยกัน (ถ้ามีเวลา)
+        let d = new Date(t.deadline);
+        let dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        let startDateTime = t.time ? `${dateStr}T${t.time}` : dateStr;
+
+        return {
+          title: t.title + ' (' + t.branch.split(' ')[0] + ')',
+          start: startDateTime,
+          color: evtColor,
+          extendedProps: { task: t }
+        };
+      });
+      calendar.addEventSource(events);
     }
 
     function updateDepartmentSuggestion() {
       const dbDepts = allTasksData.map(t => t.department).filter(d => d.trim() !== '');
-      const allDepts = [...new Set([...standardDepartments, ...dbDepts])];
-      allDepts.sort();
+      const allDepts = [...new Set([...standardDepartments, ...dbDepts])].sort();
       document.getElementById('deptOptions').innerHTML = allDepts.map(d => `<option value="${d}">`).join('');
     }
 
@@ -312,6 +394,7 @@
         if (tasks.error) return;
         allTasksData = tasks;
         updateDepartmentSuggestion(); 
+        if(!document.getElementById('calendar-sec').classList.contains('d-none')) updateCalendarEvents();
         applyFilters(); 
       }).catch(err => { list.innerHTML = `<div class="alert alert-danger shadow-sm border-0"><i class="fa-solid fa-triangle-exclamation"></i> ไม่สามารถเชื่อมต่อฐานข้อมูลได้</div>`; });
     }
@@ -333,7 +416,6 @@
       let filtered = allTasksData;
       if (branchVal !== '') filtered = filtered.filter(t => t.branch === branchVal);
       
-      // การกรอง (หน้าแรก จะซ่อนงานที่เสร็จและถูกลบ)
       if (currentStatusFilter === 'หน้าแรก') {
         filtered = filtered.filter(t => t.status !== 'เสร็จสิ้น' && t.status !== 'ถูกลบ').slice(0, 10); 
       } else {
@@ -360,16 +442,19 @@
                             task.priority === 'ปานกลาง' ? '<span class="badge bg-warning text-dark px-2 py-1 shadow-sm">ปานกลาง</span>' :
                             '<span class="badge bg-success px-2 py-1 shadow-sm">ต่ำ</span>';
 
-        // 🔴 เพิ่มวันที่ ต่อท้ายคำว่าเหลือกี่วัน
+        // 🔴 รวมวันที่และเวลามาแสดงผลในการ์ด
         let deadlineStr = new Date(task.deadline).toLocaleDateString('th-TH');
+        let timeDisplayTxt = task.time ? ` เวลา ${task.time} น.` : '';
+        let fullDateTimeStr = `${deadlineStr}${timeDisplayTxt}`;
+
         let daysLeft = Math.ceil((new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24));
         let timeDisplay = '';
         
-        if (task.status === 'เสร็จสิ้น') timeDisplay = `<span class="badge bg-light text-success border border-success p-2">ปิดงานแล้ว (${deadlineStr})</span>`;
-        else if (task.status === 'ถูกลบ') timeDisplay = `<span class="badge bg-light text-secondary border border-secondary p-2"><i class="fa-solid fa-ban"></i> ยกเลิก (${deadlineStr})</span>`;
-        else if (daysLeft < 0) timeDisplay = `<span class="badge bg-danger shadow-sm p-2"><i class="fa-solid fa-triangle-exclamation fa-fade"></i> เลยกำหนด ${Math.abs(daysLeft)} วัน! (${deadlineStr})</span>`;
-        else if (daysLeft <= 3) timeDisplay = `<span class="badge bg-warning text-dark shadow-sm p-2"><i class="fa-regular fa-bell fa-shake"></i> เหลือ ${daysLeft} วัน (${deadlineStr})</span>`;
-        else timeDisplay = `<span class="badge bg-light text-secondary border p-2">ส่ง: ${deadlineStr}</span>`;
+        if (task.status === 'เสร็จสิ้น') timeDisplay = `<span class="badge bg-light text-success border border-success p-2">ปิดงานแล้ว (${fullDateTimeStr})</span>`;
+        else if (task.status === 'ถูกลบ') timeDisplay = `<span class="badge bg-light text-secondary border border-secondary p-2"><i class="fa-solid fa-ban"></i> ยกเลิก (${fullDateTimeStr})</span>`;
+        else if (daysLeft < 0) timeDisplay = `<span class="badge bg-danger shadow-sm p-2"><i class="fa-solid fa-triangle-exclamation fa-fade"></i> เลยกำหนด ${Math.abs(daysLeft)} วัน! (${fullDateTimeStr})</span>`;
+        else if (daysLeft <= 3) timeDisplay = `<span class="badge bg-warning text-dark shadow-sm p-2"><i class="fa-regular fa-bell fa-shake"></i> เหลือ ${daysLeft} วัน (${fullDateTimeStr})</span>`;
+        else timeDisplay = `<span class="badge bg-light text-secondary border p-2">ส่ง: ${fullDateTimeStr}</span>`;
 
         let hasImage = (task.imageUrl || task.drawUrl) ? ' <i class="fa-solid fa-paperclip text-primary ms-1"></i>' : '';
 
@@ -394,10 +479,14 @@
     function openTaskModal(task) {
       document.getElementById('m_row').value = task.row;
       document.getElementById('m_branch').innerText = task.branch;
-      document.getElementById('m_deadline').innerText = new Date(task.deadline).toLocaleDateString('th-TH');
+      let deadlineStr = new Date(task.deadline).toLocaleDateString('th-TH');
+      let timeDisplayTxt = task.time ? ` เวลา ${task.time} น.` : '';
+      document.getElementById('m_deadline').innerText = `${deadlineStr}${timeDisplayTxt}`;
+      
       document.getElementById('m_title_edit').value = task.title;
       document.getElementById('m_details_edit').value = task.details;
       document.getElementById('m_status_edit').value = task.status;
+      document.getElementById('m_time_edit').value = task.time; // 🔴 ดึงเวลาเดิมมาแสดงให้แก้
       
       const imgContainer = document.getElementById('m_image_container');
       const imgElement = document.getElementById('m_image');
@@ -418,18 +507,19 @@
       const btn = document.getElementById('modalSaveBtn');
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>กำลังดำเนินการ...'; btn.disabled = true;
       const updatedData = {
-        row: document.getElementById('m_row').value, title: document.getElementById('m_title_edit').value,
-        status: document.getElementById('m_status_edit').value, details: document.getElementById('m_details_edit').value
+        row: document.getElementById('m_row').value, 
+        title: document.getElementById('m_title_edit').value,
+        status: document.getElementById('m_status_edit').value, 
+        details: document.getElementById('m_details_edit').value,
+        time: document.getElementById('m_time_edit').value // 🔴 ส่งเวลาที่แก้ไปบันทึก
       };
       fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'updateTask', taskData: updatedData }) })
       .then(() => { taskModal.hide(); loadTasks(); })
       .finally(() => { btn.innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i>บันทึกการปรับปรุง'; btn.disabled = false; });
     }
 
-    // 🔴 ฟังก์ชันเมื่อกดปุ่ม ลบงาน
     function deleteTaskAction() {
       if(!confirm("คุณแน่ใจหรือไม่ว่าต้องการลบงานนี้? (สามารถดูกลับได้ที่เมนูถังขยะ)")) return;
-      
       const btn = document.getElementById('modalDeleteBtn');
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true;
       const row = document.getElementById('m_row').value;
@@ -495,6 +585,7 @@
         format: document.getElementById('f_format').value, deadline: document.getElementById('f_deadline').value,
         priority: document.getElementById('f_priority').value, department: document.getElementById('f_department').value,
         details: document.getElementById('f_details').value, 
+        time: document.getElementById('f_time').value, // 🔴 รับค่าเวลาไปด้วย
         imageBase64: "", drawBase64: currentDrawBase64
       };
 
