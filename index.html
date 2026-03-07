@@ -18,7 +18,6 @@
     body { background-color: #f4f7f6; font-family: 'Segoe UI', Roboto, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
     .navbar { background: linear-gradient(90deg, #d32f2f 0%, #e53935 100%); color: white; padding-top: env(safe-area-inset-top); }
     
-    /* Modern Task Card */
     .task-card { border-radius: 14px; border: none; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
     .task-card:active { transform: scale(0.97); }
     .urgent-card { border-left: 6px solid #dc3545; background: linear-gradient(to right, #fff5f5, #ffffff); }
@@ -44,6 +43,8 @@
     .fc-button { padding: 0.3rem 0.5rem !important; font-size: 0.85rem !important; }
     .fc-button-primary { background-color: #d32f2f !important; border-color: #d32f2f !important; }
     .fc-event { cursor: pointer; font-size: 0.8rem; border: none; padding: 3px; border-radius: 4px; }
+    .fc-daygrid-day-frame { cursor: pointer; transition: 0.2s; }
+    .fc-daygrid-day-frame:active { background-color: #ffeaea; } /* แสดง Effect เวลากดที่ช่องวันที่ */
   </style>
 </head>
 <body>
@@ -99,6 +100,7 @@
     <div id="calendar-sec" class="d-none">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="mb-0 fw-bold text-dark"><i class="fa-solid fa-calendar-days text-primary me-2"></i>ปฏิทินงาน</h5>
+        <small class="text-muted"><i class="fa-solid fa-hand-pointer"></i> กดที่วันเพื่อเพิ่มงาน</small>
       </div>
       <div class="card shadow-sm border-0 rounded-4 p-2 bg-white">
         <div id="calendar"></div>
@@ -306,11 +308,10 @@
       }
     }
 
-    /* --- ปฏิทินแบบ Modern สำหรับมือถือ --- */
     function initCalendar() {
       const calendarEl = document.getElementById('calendar');
       calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: window.innerWidth < 768 ? 'listMonth' : 'dayGridMonth', // มือถือให้แสดงเป็น List เพื่อความสบายตา
+        initialView: window.innerWidth < 768 ? 'listMonth' : 'dayGridMonth', 
         locale: 'th',
         headerToolbar: {
           left: 'prev,next',
@@ -319,7 +320,13 @@
         },
         height: 'auto',
         events: [],
-        eventClick: function(info) { openTaskModal(info.event.extendedProps.task); }
+        eventClick: function(info) { openTaskModal(info.event.extendedProps.task); },
+        // 🔴 ฟังก์ชันกดเลือกวันที่เพื่อเพิ่มงาน
+        dateClick: function(info) {
+          showSection('add-task-sec');
+          document.getElementById('f_deadline').value = info.dateStr; // เติมวันที่ลงในฟอร์มอัตโนมัติ
+          window.scrollTo(0, 0); // เลื่อนหน้าจอกลับขึ้นไปบนสุด
+        }
       });
       calendar.render();
     }
@@ -327,7 +334,6 @@
     function updateCalendarEvents() {
       if (!calendar) return;
       calendar.removeAllEvents();
-      // 🔴 ตัดงานที่ "เสร็จสิ้น" และ "ถูกลบ" ออกจากปฏิทิน
       let events = allTasksData.filter(t => t.status !== 'ถูกลบ' && t.status !== 'เสร็จสิ้น').map(t => {
         let evtColor = t.priority === 'สูง' ? '#dc3545' : (t.priority === 'ปานกลาง' ? '#ffc107' : '#0d6efd');
         let d = new Date(t.deadline);
@@ -379,7 +385,6 @@
       renderTasks(filtered);
     }
 
-    /* --- สร้างการ์ดงาน โฉมใหม่ (Modern UI) --- */
     function buildCardHtml(task, isUrgent) {
       let statusBadge = task.status === 'ถูกลบ' ? '<span class="badge bg-secondary">ถูกลบ</span>' :
                         task.status.includes('ใหม่') ? '<span class="badge bg-info text-dark">งานใหม่</span>' :
@@ -427,12 +432,10 @@
       if (tasks.length === 0) { list.innerHTML = `<div class="col-12 mt-4 text-center text-muted"><div class="bg-white p-5 rounded-4 shadow-sm border"><i class="fa-regular fa-folder-open fs-1 mb-3"></i><h6 class="mb-0">ไม่พบข้อมูล</h6></div></div>`; return; }
       
       let html = '';
-
       if (currentStatusFilter === 'หน้าแรก') {
         let urgentHtml = '', normalHtml = '';
         tasks.filter(t => t.status !== 'เสร็จสิ้น' && t.status !== 'ถูกลบ').forEach(task => {
           let daysLeft = Math.ceil((new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24));
-          // กำหนดความด่วน: งานค้างเลยกำหนด หรือเหลือเวลา <= 2 วัน
           let isUrgent = daysLeft <= 2; 
           if(isUrgent) urgentHtml += buildCardHtml(task, true);
           else normalHtml += buildCardHtml(task, false);
@@ -441,7 +444,6 @@
         if (urgentHtml) html += `<div class="col-12 mt-1 mb-1"><h6 class="fw-bold text-danger small"><i class="fa-solid fa-bolt me-1"></i> ต้องรีบจัดการ</h6></div>` + urgentHtml;
         if (normalHtml) html += `<div class="col-12 mt-3 mb-1"><h6 class="fw-bold text-secondary small"><i class="fa-regular fa-calendar-check me-1"></i> งานที่กำลังมาถึง</h6></div>` + normalHtml;
       } else {
-        // กรองแบบปกติ
         let targetTasks = tasks.filter(t => t.status === currentStatusFilter || (currentStatusFilter === 'งานใหม่' && t.status === 'เปิดงานใหม่'));
         targetTasks.forEach(task => html += buildCardHtml(task, false));
         if(html === '') html = `<div class="col-12 mt-4 text-center text-muted"><div class="bg-white p-5 rounded-4 shadow-sm border">ไม่พบข้อมูล</div></div>`;
