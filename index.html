@@ -18,11 +18,12 @@
     body { background-color: #f4f7f6; font-family: 'Segoe UI', Roboto, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
     .navbar { background: linear-gradient(90deg, #d32f2f 0%, #e53935 100%); color: white; padding-top: env(safe-area-inset-top); }
     
+    /* UI การ์ดงานแบบใหม่ โฟกัสงานด่วน */
     .task-card { border-radius: 14px; border: none; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
     .task-card:active { transform: scale(0.97); }
-    .urgent-card { border-left: 6px solid #dc3545; background: linear-gradient(to right, #fff5f5, #ffffff); }
-    .normal-card { border-left: 6px solid #0d6efd; background: #ffffff; }
-    .done-card { border-left: 6px solid #198754; background: #f8f9fa; opacity: 0.8; }
+    .urgent-card { border-left: 6px solid #dc3545; background: linear-gradient(to right, #fffcfc, #ffffff); box-shadow: 0 4px 10px rgba(220,53,69,0.1); }
+    .normal-card { border-left: 6px solid #0d6efd; background: #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .done-card { border-left: 6px solid #198754; background: #f8f9fa; opacity: 0.7; }
     
     .mic-btn { cursor: pointer; color: #d32f2f; font-size: 1rem; transition: 0.3s; padding: 5px 10px; border-radius: 20px; background: #ffeeee; font-weight: 500; }
     .mic-btn.recording { color: white; background: #dc3545; animation: pulse 1s infinite; }
@@ -38,13 +39,13 @@
     #canvasContainer { overflow: hidden; background-color: #fff; background-image: radial-gradient(#d3d3d3 1px, transparent 1px); background-size: 20px 20px; }
     #drawingCanvas { display: block; touch-action: none; cursor: crosshair; }
     
-    /* Calendar Mobile Optimization */
+    /* 🔴 ปรับแต่งปฏิทินสำหรับมือถือ ให้ดูมินิมอลและจัดกลุ่มได้สวยงาม */
     .fc-toolbar-title { font-size: 1.1rem !important; color: #d32f2f; font-weight: bold; }
     .fc-button { padding: 0.3rem 0.5rem !important; font-size: 0.85rem !important; }
     .fc-button-primary { background-color: #d32f2f !important; border-color: #d32f2f !important; }
-    .fc-event { cursor: pointer; font-size: 0.8rem; border: none; padding: 3px; border-radius: 4px; }
-    .fc-daygrid-day-frame { cursor: pointer; transition: 0.2s; }
-    .fc-daygrid-day-frame:active { background-color: #ffeaea; } /* แสดง Effect เวลากดที่ช่องวันที่ */
+    .fc-event { cursor: pointer; font-size: 0.75rem; border: none; padding: 3px; border-radius: 4px; text-align: center; font-weight: bold; letter-spacing: 0.2px; }
+    .fc-daygrid-day-frame { cursor: pointer; transition: 0.2s; min-height: 60px !important; }
+    .fc-daygrid-day-frame:active { background-color: #f8d7da; }
   </style>
 </head>
 <body>
@@ -99,10 +100,10 @@
     
     <div id="calendar-sec" class="d-none">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="mb-0 fw-bold text-dark"><i class="fa-solid fa-calendar-days text-primary me-2"></i>ปฏิทินงาน</h5>
-        <small class="text-muted"><i class="fa-solid fa-hand-pointer"></i> กดที่วันเพื่อเพิ่มงาน</small>
+        <h5 class="mb-0 fw-bold text-dark"><i class="fa-solid fa-calendar-days text-primary me-2"></i>ภาพรวมปฏิทิน</h5>
+        <small class="text-muted"><i class="fa-solid fa-hand-pointer"></i> แตะวันที่เพื่อเพิ่มงาน</small>
       </div>
-      <div class="card shadow-sm border-0 rounded-4 p-2 bg-white">
+      <div class="card shadow-sm border-0 rounded-4 p-2 bg-white mb-4">
         <div id="calendar"></div>
       </div>
     </div>
@@ -140,7 +141,7 @@
           <div class="d-none"><select id="f_format"><option value=""></option><option value="CO">CO</option><option value="FC">FC</option></select></div>
           <div class="row">
             <div class="col-6 mb-3">
-              <label class="form-label fw-bold">กำหนดเสร็จ (วันที่)</label>
+              <label class="form-label fw-bold">กำหนดเสร็จ</label>
               <input type="date" class="form-control" id="f_deadline" required>
             </div>
             <div class="col-6 mb-3">
@@ -150,9 +151,9 @@
             <div class="col-12 mb-3">
               <label class="form-label fw-bold">ระดับความสำคัญ</label>
               <select class="form-select" id="f_priority" required>
-                <option value="สูง">🔴 ระดับสูง (เร่งด่วน)</option>
-                <option value="ปานกลาง">🟡 ระดับปานกลาง</option>
-                <option value="ต่ำ">🟢 ระดับต่ำ</option>
+                <option value="สูง">🔴 สูง (เร่งด่วน)</option>
+                <option value="ปานกลาง">🟡 ปานกลาง</option>
+                <option value="ต่ำ">🟢 ต่ำ</option>
               </select>
             </div>
           </div>
@@ -164,12 +165,12 @@
           <div class="mb-3">
             <label class="form-label fw-bold d-flex justify-content-between align-items-center w-100">
               รายละเอียด
-              <span class="mic-btn shadow-sm" id="micBtn" onclick="toggleMic()"><i class="fa-solid fa-microphone"></i> พิมพ์ด้วยเสียง</span>
+              <span class="mic-btn shadow-sm" id="micBtn" onclick="toggleMic()"><i class="fa-solid fa-microphone"></i> พูดจดโน้ต</span>
             </label>
             <textarea class="form-control mb-3" id="f_details" rows="3" placeholder="ระบุรายละเอียด..."></textarea>
             
             <button type="button" class="btn btn-outline-primary w-100 py-2 fw-bold" onclick="openDrawModal()" style="border-radius: 8px; border-style: dashed;">
-              <i class="fa-solid fa-signature me-2"></i> กดเพื่อเปิดกระดานจดโน้ต
+              <i class="fa-solid fa-signature me-2"></i> วาด/เซ็น ลายมือ
             </button>
             <div id="drawPreviewContainer" class="mt-3 text-center d-none position-relative bg-light border rounded-3 p-2">
               <img id="drawPreview" src="" class="img-fluid rounded shadow-sm" style="max-height: 120px;">
@@ -177,7 +178,7 @@
             </div>
           </div>
           <div class="mb-4">
-            <label class="form-label fw-bold"><i class="fa-solid fa-image"></i> ภาพถ่ายประกอบ (ถ้ามี)</label>
+            <label class="form-label fw-bold"><i class="fa-solid fa-image"></i> ภาพถ่ายประกอบ</label>
             <input type="file" class="form-control" id="f_image" accept="image/*">
           </div>
           <button type="submit" class="btn btn-danger w-100 fw-bold py-2 rounded-pill shadow-sm" id="saveBtn">
@@ -235,7 +236,7 @@
           </div>
           <div class="mb-3"><label class="fw-bold text-dark small mb-1">รายละเอียด</label><textarea id="m_details_edit" class="form-control bg-white" rows="3"></textarea></div>
           <div id="m_image_container" class="mt-2 text-center d-none">
-            <label class="fw-bold text-dark small d-block text-start mb-2">ภาพประกอบ / Note (กดรูปเพื่อขยาย)</label>
+            <label class="fw-bold text-dark small d-block text-start mb-2">ภาพประกอบ (แตะรูปเพื่อขยาย)</label>
             <img id="m_image" src="" class="img-fluid rounded-3 border shadow-sm clickable-img mb-2" style="max-height: 150px;" onclick="viewFullImage(this.src)">
             <img id="m_draw_image" src="" class="img-fluid rounded-3 border shadow-sm clickable-img d-none" style="max-height: 150px;" onclick="viewFullImage(this.src)">
           </div>
@@ -264,6 +265,7 @@
 
     let allTasksData = [];
     let currentStatusFilter = 'หน้าแรก';
+    let selectedDateFilter = null; // ตัวแปรสำหรับกดดูงานจากปฏิทิน
     let currentDrawBase64 = ""; 
     let isCanvasDrawn = false;
     let calendar; 
@@ -308,24 +310,30 @@
       }
     }
 
+    /* --- 🔴 ระบบปฏิทินแบบ Group งานซ้ำวันกัน --- */
     function initCalendar() {
       const calendarEl = document.getElementById('calendar');
       calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: window.innerWidth < 768 ? 'listMonth' : 'dayGridMonth', 
+        initialView: 'dayGridMonth', 
         locale: 'th',
-        headerToolbar: {
-          left: 'prev,next',
-          center: 'title',
-          right: window.innerWidth < 768 ? 'dayGridMonth,listMonth' : 'dayGridMonth,timeGridWeek,listWeek'
-        },
+        headerToolbar: { left: 'prev,next', center: 'title', right: 'today' },
         height: 'auto',
+        contentHeight: 'auto',
         events: [],
-        eventClick: function(info) { openTaskModal(info.event.extendedProps.task); },
-        // 🔴 ฟังก์ชันกดเลือกวันที่เพื่อเพิ่มงาน
+        
+        // 🔴 เมื่อกดที่เหตุการณ์ (แท็บสี) บนปฏิทิน ให้พากลับไปหน้าแรกแล้วโชว์เฉพาะงานวันนั้น
+        eventClick: function(info) { 
+          selectedDateFilter = info.event.extendedProps.dateStr;
+          showSection('dashboard-sec');
+          setFilterStatus('ตามวันที่');
+          window.scrollTo(0, 0);
+        },
+        
+        // 🔴 เมื่อกดที่ช่องว่างของวัน ให้เปิดฟอร์มสร้างงานใหม่พร้อมใส่วันที่รอเลย
         dateClick: function(info) {
           showSection('add-task-sec');
-          document.getElementById('f_deadline').value = info.dateStr; // เติมวันที่ลงในฟอร์มอัตโนมัติ
-          window.scrollTo(0, 0); // เลื่อนหน้าจอกลับขึ้นไปบนสุด
+          document.getElementById('f_deadline').value = info.dateStr; 
+          window.scrollTo(0, 0); 
         }
       });
       calendar.render();
@@ -334,17 +342,42 @@
     function updateCalendarEvents() {
       if (!calendar) return;
       calendar.removeAllEvents();
-      let events = allTasksData.filter(t => t.status !== 'ถูกลบ' && t.status !== 'เสร็จสิ้น').map(t => {
-        let evtColor = t.priority === 'สูง' ? '#dc3545' : (t.priority === 'ปานกลาง' ? '#ffc107' : '#0d6efd');
+      
+      // ดึงงานที่ยังไม่เสร็จหรือถูกลบ
+      let activeTasks = allTasksData.filter(t => t.status !== 'ถูกลบ' && t.status !== 'เสร็จสิ้น');
+      let tasksByDate = {};
+
+      // จัดกลุ่มงานตามวันที่
+      activeTasks.forEach(t => {
         let d = new Date(t.deadline);
         let dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-        return {
-          title: t.title + ' (' + t.branch.split(' ')[0] + ')',
-          start: t.time ? `${dateStr}T${t.time}` : dateStr,
-          color: evtColor,
-          extendedProps: { task: t }
-        };
+        if(!tasksByDate[dateStr]) tasksByDate[dateStr] = [];
+        tasksByDate[dateStr].push(t);
       });
+
+      let events = [];
+      // สร้างแท็บปฏิทิน 1 แท็บต่อ 1 วัน
+      for (let dateStr in tasksByDate) {
+        let dailyTasks = tasksByDate[dateStr];
+        let firstBranchCode = dailyTasks[0].branch.split(' ')[0]; // เอารหัสสาขางานแรก
+        
+        let title = firstBranchCode;
+        if (dailyTasks.length > 1) {
+          title += ` (+${dailyTasks.length - 1})`; // ถ้างามมีมากกว่า 1 ให้แสดง (+จำนวน)
+        }
+
+        // เช็คความสำคัญเพื่อใส่สี (เอาสีงานที่ด่วนที่สุดของวันนั้นเป็นหลัก)
+        let hasHigh = dailyTasks.some(t => t.priority === 'สูง');
+        let hasMed = dailyTasks.some(t => t.priority === 'ปานกลาง');
+        let evtColor = hasHigh ? '#dc3545' : (hasMed ? '#ffc107' : '#0d6efd');
+
+        events.push({
+          title: title,
+          start: dateStr,
+          color: evtColor,
+          extendedProps: { dateStr: dateStr }
+        });
+      }
       calendar.addEventSource(events);
     }
 
@@ -367,14 +400,17 @@
 
     function setFilterStatus(status) {
       currentStatusFilter = status;
-      let titles = {
-        'หน้าแรก': '<i class="fa-solid fa-bolt text-danger me-2"></i>สรุปงานสำคัญ',
-        'ถูกลบ': '<i class="fa-solid fa-trash-can text-secondary me-2"></i>ถังขยะ',
-        'งานใหม่': '<i class="fa-solid fa-asterisk text-info me-2"></i>งานใหม่',
-        'กำลังดำเนินงาน': '<i class="fa-solid fa-spinner text-warning me-2"></i>ดำเนินการ',
-        'เสร็จสิ้น': '<i class="fa-solid fa-check text-success me-2"></i>เสร็จสิ้น'
-      };
-      document.getElementById('dashboard-title').innerHTML = titles[status];
+      let titleIcon = '';
+      if(status === 'หน้าแรก') titleIcon = '<i class="fa-solid fa-bolt text-danger me-2"></i>สรุปงานสำคัญ';
+      else if(status === 'ถูกลบ') titleIcon = '<i class="fa-solid fa-trash-can text-secondary me-2"></i>ถังขยะ';
+      else if(status === 'งานใหม่') titleIcon = '<i class="fa-solid fa-asterisk text-info me-2"></i>งานใหม่';
+      else if(status === 'กำลังดำเนินงาน') titleIcon = '<i class="fa-solid fa-spinner text-warning me-2"></i>ดำเนินการ';
+      else if(status === 'เสร็จสิ้น') titleIcon = '<i class="fa-solid fa-check text-success me-2"></i>เสร็จสิ้น';
+      else if(status === 'ตามวันที่') {
+        let d = new Date(selectedDateFilter);
+        titleIcon = `<i class="fa-regular fa-calendar-check text-primary me-2"></i>งานประจำวันที่ ${d.toLocaleDateString('th-TH')}`;
+      }
+      document.getElementById('dashboard-title').innerHTML = titleIcon;
       applyFilters();
     }
 
@@ -382,6 +418,21 @@
       const branchVal = document.getElementById('branchFilter').value;
       let filtered = allTasksData;
       if (branchVal !== '') filtered = filtered.filter(t => t.branch === branchVal);
+      
+      // กรองสถานะ
+      if (currentStatusFilter === 'หน้าแรก') {
+        filtered = filtered.filter(t => t.status !== 'เสร็จสิ้น' && t.status !== 'ถูกลบ').slice(0, 10); 
+      } else if (currentStatusFilter === 'ตามวันที่') {
+        // ดึงเฉพาะงานของวันที่เลือกมาจากปฏิทิน
+        filtered = filtered.filter(t => {
+          if (t.status === 'ถูกลบ' || t.status === 'เสร็จสิ้น') return false;
+          let d = new Date(t.deadline);
+          let dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+          return dateStr === selectedDateFilter;
+        });
+      } else {
+        filtered = filtered.filter(t => t.status === currentStatusFilter || (currentStatusFilter === 'งานใหม่' && t.status === 'เปิดงานใหม่'));
+      }
       renderTasks(filtered);
     }
 
@@ -400,7 +451,7 @@
       
       let timeLeftHtml = '';
       if (task.status === 'เสร็จสิ้น') timeLeftHtml = `<span class="text-success fw-bold small"><i class="fa-solid fa-check-circle"></i> ปิดงานแล้ว</span>`;
-      else if (task.status === 'ถูกลบ') timeLeftHtml = `<span class="text-secondary fw-bold small"><i class="fa-solid fa-ban"></i> ยกเลิก</span>`;
+      else if (task.status === 'ถูกลบ') timeLeftHtml = `<span class="text-secondary fw-bold small"><i class="fa-solid fa-ban"></i> ยกเลิกแล้ว</span>`;
       else if (daysLeft < 0) timeLeftHtml = `<span class="text-danger fw-bold small"><i class="fa-solid fa-triangle-exclamation fa-fade"></i> ช้ากว่ากำหนด ${Math.abs(daysLeft)} วัน</span>`;
       else if (daysLeft === 0) timeLeftHtml = `<span class="text-danger fw-bold small"><i class="fa-solid fa-clock fa-shake"></i> กำหนดส่งวันนี้!</span>`;
       else if (daysLeft <= 2) timeLeftHtml = `<span class="text-warning text-dark fw-bold small"><i class="fa-solid fa-bell fa-shake"></i> เหลือ ${daysLeft} วัน</span>`;
@@ -429,7 +480,7 @@
 
     function renderTasks(tasks) {
       const list = document.getElementById('task-list');
-      if (tasks.length === 0) { list.innerHTML = `<div class="col-12 mt-4 text-center text-muted"><div class="bg-white p-5 rounded-4 shadow-sm border"><i class="fa-regular fa-folder-open fs-1 mb-3"></i><h6 class="mb-0">ไม่พบข้อมูล</h6></div></div>`; return; }
+      if (tasks.length === 0) { list.innerHTML = `<div class="col-12 mt-4 text-center text-muted"><div class="bg-white p-5 rounded-4 shadow-sm border"><i class="fa-regular fa-folder-open fs-1 mb-3"></i><h6 class="mb-0">ไม่มีงานค้าง</h6></div></div>`; return; }
       
       let html = '';
       if (currentStatusFilter === 'หน้าแรก') {
@@ -440,13 +491,11 @@
           if(isUrgent) urgentHtml += buildCardHtml(task, true);
           else normalHtml += buildCardHtml(task, false);
         });
-
         if (urgentHtml) html += `<div class="col-12 mt-1 mb-1"><h6 class="fw-bold text-danger small"><i class="fa-solid fa-bolt me-1"></i> ต้องรีบจัดการ</h6></div>` + urgentHtml;
         if (normalHtml) html += `<div class="col-12 mt-3 mb-1"><h6 class="fw-bold text-secondary small"><i class="fa-regular fa-calendar-check me-1"></i> งานที่กำลังมาถึง</h6></div>` + normalHtml;
       } else {
-        let targetTasks = tasks.filter(t => t.status === currentStatusFilter || (currentStatusFilter === 'งานใหม่' && t.status === 'เปิดงานใหม่'));
-        targetTasks.forEach(task => html += buildCardHtml(task, false));
-        if(html === '') html = `<div class="col-12 mt-4 text-center text-muted"><div class="bg-white p-5 rounded-4 shadow-sm border">ไม่พบข้อมูล</div></div>`;
+        // กรองแบบปกติ หรือแบบ "ตามวันที่กดจากปฏิทิน" ให้แสดงแบบการ์ดปกติ
+        tasks.forEach(task => html += buildCardHtml(task, false));
       }
       list.innerHTML = html;
     }
